@@ -1,0 +1,75 @@
+#include <GLFW/glfw3.h>
+#include "Axis.h"
+#include "InputManager.h"
+#include "../graphics/Window.h"
+
+namespace P1 { namespace inputs {
+	void update(Axis *axis);
+	Axis::Axis(P1::graphics::Window* window, std::vector<int> positives, std::vector<int> negatives) {
+		for(std::vector<int>::iterator it = positives.begin(); it != positives.end(); ++it)
+			this->positives.push_back(*it);
+		for(std::vector<int>::iterator it = negatives.begin(); it != negatives.end(); ++it)
+			this->negatives.push_back(*it);
+		context = window->inputListener;
+		window->inputListener->eventManager->pong([this](){getRaw(this);});
+		window->eventManager->on("update", [this](){update(this);});
+	}
+
+	void getRaw(Axis* axis) {
+		int result = 0;
+		for(std::vector<int>::iterator it = axis->positives.begin(); it != axis->positives.end(); ++it)
+			if(axis->context->isKeyPressed(*it)) {
+				result++;
+				break;
+			}
+		for(std::vector<int>::iterator it = axis->negatives.begin(); it != axis->negatives.end(); ++it)
+			if(axis->context->isKeyPressed(*it)) {
+				result--;
+				break;
+			}
+		axis->m_raw = result;
+	}
+
+	void update(Axis* axis) {
+		axis->update_linear();
+		axis->update_smooth();
+	}
+
+	Axis2D::Axis2D(P1::graphics::Window* window, std::vector<int> left, std::vector<int> up,
+				std::vector<int> right, std::vector<int> down) {
+		x = std::make_unique<Axis>(window, right, left);
+		y = std::make_unique<Axis>(window, up, down);
+	}
+
+	void Axis::update_linear() {
+		if(m_linear == m_raw) return;
+
+		if(m_linear < m_raw)
+			m_linear += speed;
+		else if(m_linear > m_raw)
+			m_linear -= speed;
+
+		if(m_linear > 1)
+			m_linear = 1;
+		else if(m_linear < -1)
+			m_linear = -1;
+		else if(abs(m_raw - m_linear) <= dead)
+			m_linear = m_raw;
+	}
+
+	void Axis::update_smooth() {
+		if(m_smooth == m_raw) return;
+
+		if(m_smooth < m_raw)
+			m_smooth += abs(m_smooth - m_raw) / smoothness;
+		else if(m_smooth > m_raw)
+			m_smooth -= abs(m_smooth - m_raw) / smoothness;
+
+		if(m_smooth > 1)
+			m_smooth = 1;
+		else if(m_smooth < -1)
+			m_smooth = -1;
+		else if(abs(m_raw - m_smooth) <= dead)
+			m_smooth = m_raw;
+	}
+}}
