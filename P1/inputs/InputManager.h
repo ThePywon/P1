@@ -10,6 +10,8 @@
 namespace P1 { namespace graphics { class Window; class WindowManager; }}
 
 namespace P1 { namespace inputs {
+	#define UPDATE 0
+
 	class InputManager;
 	class Axis;
 	class InputListener {
@@ -17,7 +19,7 @@ namespace P1 { namespace inputs {
 		friend InputManager;
 		friend Axis;
 		GLFWwindow* context;
-		std::unique_ptr<P1::events::VoidManager> eventManager;
+		std::unique_ptr<P1::events::EventManager<GLFWwindow*>> eventManager;
 		P1::math::Vector2<double> mousePos{};
 		bool keys[MAX_KEYS];
 		bool mouseButtons[MAX_MOUSE_BUTTONS];

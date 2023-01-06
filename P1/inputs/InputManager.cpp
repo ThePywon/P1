@@ -30,7 +30,7 @@ namespace P1 { namespace inputs {
 					(*it)->keys[key] = true;
 				else if(action == GLFW_RELEASE)
 					(*it)->keys[key] = false;
-				(*it)->eventManager->ping();
+				(*it)->eventManager->emit(window);
 				return;
 			}
 		}
@@ -42,7 +42,7 @@ namespace P1 { namespace inputs {
 					(*it)->mouseButtons[button] = true;
 				else if(action == GLFW_RELEASE)
 					(*it)->mouseButtons[button] = false;
-				(*it)->eventManager->ping();
+				(*it)->eventManager->emit(window);
 				return;
 			}
 		}
@@ -52,7 +52,7 @@ namespace P1 { namespace inputs {
 			if((*it)->context == window) {
 				(*it)->mousePos.x = x;
 				(*it)->mousePos.y = y;
-				(*it)->eventManager->ping();
+				(*it)->eventManager->emit(window);
 				return;
 			}
 		}

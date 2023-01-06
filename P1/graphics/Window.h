@@ -2,6 +2,8 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 #include <list>
+#include <map>
+#include <vector>
 #include "../math/Vector2.h"
 #include "../events/EventManager.h"
 #include "../inputs/InputManager.h"
@@ -50,7 +52,5 @@ namespace P1 { namespace graphics {
 		inline P1::math::Vector2<int> getSize() const { return P1::math::Vector2<int>(width, height); }
 	private:
 		bool init();
-
-		//Window& operator = (Window&& other) = delete;
 	};
 }}

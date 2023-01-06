@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../math/Concepts.h"
+#include "../concepts/MathConcepts.h"
 
 template <typename T>
 class Proxy {

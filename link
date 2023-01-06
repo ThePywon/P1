@@ -1,6 +1,9 @@
 # Get the current path
 path=`dirname "$0"`
 
+# Make directory if inexistant
+mkdir -p "$path/build"
+
 # Move to ./build
 cd "$path/build"
 

@@ -1,6 +1,5 @@
 #include <GLFW/glfw3.h>
 #include <functional>
-#include <memory>
 #include "Window.h"
 #include "../inputs/InputManager.h"
 #include "../events/EventManager.h"
@@ -45,7 +44,10 @@ namespace P1 { namespace graphics {
 		this->width = width;
 		this->height = height;
 
-		if(!init()) glfwTerminate();
+		if(!init()) {
+			glfwTerminate();
+			state = INVALID_WINDOW;
+		}
 		glfwMakeContextCurrent(NULL);
 
 		eventManager = std::make_unique<P1::events::EventManager<std::string>>();
@@ -63,8 +65,6 @@ namespace P1 { namespace graphics {
 	}
 
 	bool Window::init() {
-		if(!glfwInit()) return false;
-
 		glfwWindow = glfwCreateWindow(width, height, name, NULL, NULL);
 		if(!glfwWindow) return false;
 

@@ -5,12 +5,14 @@
 #include <cmath>
 #include "Matrix.h"
 #include "../miscellaneous/Proxy.h"
+#include "../concepts/MathConcepts.h"
 
 namespace P1::math {
-	template <typename T> class Matrix;
+	template <typename T, unsigned int W, unsigned int H> class Matrix;
 
-	template <typename T>
-	class Vector2: public Matrix<T> {
+	template <typename T = double>
+	requires P1::concepts::Number<T>
+	class Vector2: public Matrix<T, 1, 3> {
 	public:
 		unsigned int width() = delete;
 		unsigned int height() = delete;
@@ -18,13 +20,13 @@ namespace P1::math {
 		Proxy<T> x;
 		Proxy<T> y;
 
-		Vector2(): Matrix<T>(1, 3) {
+		Vector2(): Matrix<T, 1, 3>() {
 			this->data[2][0] = 1;
 
 			Proxy<T>::set_ref(x, this->data[0][0]);
 			Proxy<T>::set_ref(y, this->data[1][0]);
 		}
-		Vector2(T x, T y): Matrix<T>(1, 3) {
+		Vector2(T x, T y): Matrix<T, 1, 3>() {
 			this->data[0][0] = x;
 			this->data[1][0] = y;
 			this->data[2][0] = 1;
@@ -32,7 +34,7 @@ namespace P1::math {
 			Proxy<T>::set_ref(this->x, this->data[0][0]);
 			Proxy<T>::set_ref(this->y, this->data[1][0]);
 		}
-		Vector2(const Vector2& other) : Matrix<T>(1, 3) {
+		Vector2(const Vector2& other) : Matrix<T, 1, 3>() {
 			this->data[0][0] = static_cast<T>(other.data[0][0]);
 			this->data[1][0] = static_cast<T>(other.data[1][0]);
 			this->data[2][0] = 1;

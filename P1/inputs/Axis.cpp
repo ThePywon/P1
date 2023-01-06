@@ -11,7 +11,7 @@ namespace P1 { namespace inputs {
 		for(std::vector<int>::iterator it = negatives.begin(); it != negatives.end(); ++it)
 			this->negatives.push_back(*it);
 		context = window->inputListener;
-		window->inputListener->eventManager->pong([this](){getRaw(this);});
+		window->inputListener->eventManager->funnel([this](){getRaw(this);});
 		window->eventManager->on("update", [this](){update(this);});
 	}
 
@@ -53,7 +53,7 @@ namespace P1 { namespace inputs {
 			m_linear = 1;
 		else if(m_linear < -1)
 			m_linear = -1;
-		else if(abs(m_raw - m_linear) <= dead)
+		else if(fabs(m_raw - m_linear) <= dead)
 			m_linear = m_raw;
 	}
 
@@ -61,15 +61,15 @@ namespace P1 { namespace inputs {
 		if(m_smooth == m_raw) return;
 
 		if(m_smooth < m_raw)
-			m_smooth += abs(m_smooth - m_raw) / smoothness;
+			m_smooth += fabs(m_smooth - m_raw) / smoothness;
 		else if(m_smooth > m_raw)
-			m_smooth -= abs(m_smooth - m_raw) / smoothness;
+			m_smooth -= fabs(m_smooth - m_raw) / smoothness;
 
 		if(m_smooth > 1)
 			m_smooth = 1;
 		else if(m_smooth < -1)
 			m_smooth = -1;
-		else if(abs(m_raw - m_smooth) <= dead)
+		else if(fabs(m_raw - m_smooth) <= dead)
 			m_smooth = m_raw;
 	}
 }}
