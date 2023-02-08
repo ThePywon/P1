@@ -8,10 +8,9 @@
 #include "../concepts/MathConcepts.h"
 
 namespace P1::math {
-	template <typename T, unsigned int W, unsigned int H> class Matrix;
+	template <P1::concepts::Number T, unsigned int W, unsigned int H> class Matrix;
 
-	template <typename T = double>
-	requires P1::concepts::Number<T>
+	template <P1::concepts::Number T = double>
 	class Vector2: public Matrix<T, 1, 3> {
 	public:
 		unsigned int width() = delete;
@@ -46,8 +45,15 @@ namespace P1::math {
 		double& operator () (int x, int y) = delete;
 		double operator () (int x, int y) const = delete;
 
-		inline static Vector2<T> zero() { return Vector2<T>(); }
-		inline static Vector2<T> one() { return Vector2<T>(1, 1); }
+		static Vector2<T> zero() { return Vector2<T>(); }
+		static Vector2<T> one() { return Vector2<T>(1, 1); }
+
+		Matrix<T, 3> to_scale_matrix() {
+			return Matrix<T, 3>::scale(x, y);
+		}
+		Matrix<T, 3> to_translate_matrix() {
+			return Matrix<T, 3>::translate(x, y);
+		}
 
 		template <typename _T>
 		operator Vector2<_T> () {
@@ -80,50 +86,60 @@ namespace P1::math {
 			return Vector2(*this);
 		}
 
-		Vector2 operator + (const Vector2& other) {
+		template <P1::concepts::Number _T>
+		Vector2 operator + (const Vector2<_T>& other) {
 			return Vector2(x + other.x, y + other.y);
 		}
 		inline Vector2 operator + () { return Vector2(+x, +y); }
 
-		Vector2 operator += (const Vector2& other) {
+		template <P1::concepts::Number _T>
+		Vector2 operator += (const Vector2<_T>& other) {
 			x += other.x;
 			y += other.y;
 			return *this;
 		}
 
-		Vector2 operator - (const Vector2& other) {
+		template <P1::concepts::Number _T>
+		Vector2 operator - (const Vector2<_T>& other) {
 			return Vector2(x - other.x, y - other.y);
 		}
 		inline Vector2 operator - () { return Vector2(-x, -y); }
 
-		Vector2 operator -= (const Vector2& other) {
+		template <P1::concepts::Number _T>
+		Vector2 operator -= (const Vector2<_T>& other) {
 			x -= other.x;
 			y -= other.y;
 			return *this;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
+		double operator * (const Vector2<_T>& other) {
+			return x * other.x + y * other.y;
+		}
+
+		template <P1::concepts::Number _T>
 		Vector2 operator * (const _T& value) {
 			return Vector2(x * value, y * value);
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector2 operator / (const _T& value) {
 			return Vector2(x / value, y / value);
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
+		friend Vector2 operator / (const _T& value, const Vector2& v2) {
+			return Vector2(v2.x / value, v2.y / value);
+		}
+
+		template <P1::concepts::Number _T>
 		Vector2 operator /= (const _T& value) {
 			x /= value;
 			y /= value;
 			return *this;
 		}
 
-		double operator * (const Vector2& other) {
-			return x * other.x + y * other.y;
-		}
-
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector2 operator *= (const _T& value) {
 			x *= value;
 			y *= value;

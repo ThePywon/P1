@@ -4,18 +4,27 @@
 #include "../graphics/Window.h"
 
 namespace P1 { namespace inputs {
+	void get_raw(Axis* axis);
 	void update(Axis *axis);
-	Axis::Axis(P1::graphics::Window* window, std::vector<int> positives, std::vector<int> negatives) {
+	
+	Axis::Axis(graphics::Window* window, std::vector<int> positives, std::vector<int> negatives) {
 		for(std::vector<int>::iterator it = positives.begin(); it != positives.end(); ++it)
 			this->positives.push_back(*it);
 		for(std::vector<int>::iterator it = negatives.begin(); it != negatives.end(); ++it)
 			this->negatives.push_back(*it);
-		context = window->inputListener;
-		window->inputListener->eventManager->funnel([this](){getRaw(this);});
-		window->eventManager->on("update", [this](){update(this);});
+		context = window->input_listener;
+		window->input_listener->event_manager->on([this](){get_raw(this);});
+		window->event_manager->on(WINDOW_UPDATE_EVENT, [this](){update(this);});
+	}
+	Axis::Axis(graphics::Window* window, int positive, int negative) {
+		positives.push_back(positive);
+		negatives.push_back(negative);
+		context = window->input_listener;
+		window->input_listener->event_manager->on([this](){get_raw(this);});
+		window->event_manager->on(WINDOW_UPDATE_EVENT, [this](){update(this);});
 	}
 
-	void getRaw(Axis* axis) {
+	void get_raw(Axis* axis) {
 		int result = 0;
 		for(std::vector<int>::iterator it = axis->positives.begin(); it != axis->positives.end(); ++it)
 			if(axis->context->isKeyPressed(*it)) {
@@ -35,8 +44,12 @@ namespace P1 { namespace inputs {
 		axis->update_smooth();
 	}
 
-	Axis2D::Axis2D(P1::graphics::Window* window, std::vector<int> left, std::vector<int> up,
+	Axis2D::Axis2D(graphics::Window* window, std::vector<int> left, std::vector<int> up,
 				std::vector<int> right, std::vector<int> down) {
+		x = std::make_unique<Axis>(window, right, left);
+		y = std::make_unique<Axis>(window, up, down);
+	}
+	Axis2D::Axis2D(graphics::Window* window, int left, int up, int right, int down) {
 		x = std::make_unique<Axis>(window, right, left);
 		y = std::make_unique<Axis>(window, up, down);
 	}

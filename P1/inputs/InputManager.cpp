@@ -11,11 +11,11 @@
 namespace P1 { namespace graphics { class Window; class WindowManager; }}
 
 namespace P1 { namespace inputs {
-	InputListener::InputListener(P1::graphics::Window* window) {
+	InputListener::InputListener(graphics::Window* window) {
 		for(int i = 0; i < sizeof(keys) / sizeof(bool); i++) keys[i] = false;
 		for(int i = 0; i < sizeof(mouseButtons) / sizeof(bool); i++) mouseButtons[i] = false;
 		context = window->glfwWindow;
-		eventManager = std::make_unique<P1::events::EventManager<GLFWwindow*>>();
+		event_manager = std::make_unique<events::EventManager<void>>();
 		InputManager::listeners.push_back(this);
 	}
 
@@ -30,7 +30,7 @@ namespace P1 { namespace inputs {
 					(*it)->keys[key] = true;
 				else if(action == GLFW_RELEASE)
 					(*it)->keys[key] = false;
-				(*it)->eventManager->emit(window);
+				(*it)->event_manager->emit();
 				return;
 			}
 		}
@@ -42,7 +42,7 @@ namespace P1 { namespace inputs {
 					(*it)->mouseButtons[button] = true;
 				else if(action == GLFW_RELEASE)
 					(*it)->mouseButtons[button] = false;
-				(*it)->eventManager->emit(window);
+				(*it)->event_manager->emit();
 				return;
 			}
 		}
@@ -52,7 +52,7 @@ namespace P1 { namespace inputs {
 			if((*it)->context == window) {
 				(*it)->mousePos.x = x;
 				(*it)->mousePos.y = y;
-				(*it)->eventManager->emit(window);
+				(*it)->event_manager->emit();
 				return;
 			}
 		}

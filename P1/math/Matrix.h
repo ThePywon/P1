@@ -10,10 +10,10 @@
 #include "Vector3.h"
 
 namespace P1::math {
-	template <typename T> requires P1::concepts::Number<T> class Vector2;
-	template <typename T> requires P1::concepts::Number<T> class Vector3;
+	template <P1::concepts::Number T> class Vector2;
+	template <P1::concepts::Number T> class Vector3;
 
-	template <typename T, unsigned int W, unsigned int H = W>
+	template <P1::concepts::Number T, unsigned int W, unsigned int H = W>
 	class Matrix {
 	protected:
 		std::vector<std::vector<T>> data;
@@ -41,7 +41,7 @@ namespace P1::math {
 			return result;
 		}
 
-		template <typename... Args>
+		template <P1::concepts::IS<T>... Args>
 		requires(W != 0 && H != 0 && W == H)
 		static Matrix scale(Args... args) {
 			static_assert(sizeof...(args) + 1 == W);
@@ -49,15 +49,17 @@ namespace P1::math {
 			Matrix result{};
 			int index = 0;
 			T values[] = { static_cast<T>(args)... };
+
 			for(T arg : values) {
 				result.data[index][index] = arg;
 				index++;
 			}
 			result.data[H-1][W-1] = 1;
+
 			return result;
 		}
 
-		template <typename... Args>
+		template <P1::concepts::IS<T>... Args>
 		requires(W != 0 && H != 0 && W == H)
 		static Matrix translate(Args... args) {
 			static_assert(sizeof...(args) + 1 == W);
@@ -65,12 +67,14 @@ namespace P1::math {
 			Matrix result{};
 			int index = 0;
 			T values[] = { static_cast<T>(args)... };
+
 			for(auto arg : values) {
 				result.data[index][W-1] = arg;
 				index++;
 			}
 			for(int i = 0; i < W; i++)
 				result.data[i][i] = 1;
+
 			return result;
 		}
 
@@ -85,7 +89,7 @@ namespace P1::math {
 			return data[y][x];
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Matrix operator + (const Matrix<_T, W, H>& other) {
 			Matrix result{};
 			for(int y = 0; y < H; y++)
@@ -102,7 +106,7 @@ namespace P1::math {
 			return result;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Matrix operator += (const Matrix<_T, W, H>& other) {
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
@@ -110,7 +114,7 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Matrix operator - (const Matrix<_T, W, H>& other) {
 			Matrix result{};
 			for(int y = 0; y < H; y++)
@@ -127,7 +131,7 @@ namespace P1::math {
 			return result;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Matrix& operator -= (const Matrix<_T, W, H>& other) {
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
@@ -135,8 +139,7 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
-		requires(P1::concepts::Number<_T>)
+		template <P1::concepts::Number _T>
 		Matrix operator * (const _T& value) {
 			Matrix result{};
 			for(int y = 0; y < H; y++)
@@ -144,8 +147,8 @@ namespace P1::math {
 					result.data[y][x] = this->data[y][x] * value;
 			return result;
 		}
-		template <typename _T>
-		friend Matrix operator * (const _T& value, const Matrix<T, W, H>& mat) {
+		template <P1::concepts::Number _T>
+		friend Matrix operator * (const _T& value, const Matrix& mat) {
 			Matrix result{};
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
@@ -153,7 +156,7 @@ namespace P1::math {
 			return result;
 		}
 
-		template <typename _T, unsigned int _W, unsigned int _H = _W>
+		template <P1::concepts::Number _T, unsigned int _W, unsigned int _H = _W>
 		Matrix operator * (const Matrix<_T, _W, _H>& other) {
 			static_assert(W == _H);
 
@@ -170,8 +173,7 @@ namespace P1::math {
 			return result;
 		}
 
-		template <typename _T>
-		requires(P1::concepts::Number<_T>)
+		template <P1::concepts::Number _T>
 		Matrix& operator *= (const _T& value) {
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
@@ -179,9 +181,8 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
-		requires(P1::concepts::Number<_T>)
-		Matrix operator / (const T& value) {
+		template <P1::concepts::Number _T>
+		Matrix operator / (const _T& value) {
 			Matrix result{};
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
@@ -189,8 +190,16 @@ namespace P1::math {
 			return result;
 		}
 
-		template <typename _T>
-		requires(P1::concepts::Number<_T>)
+		template <P1::concepts::Number _T>
+		friend Matrix operator / (const _T& value, const Matrix& mat) {
+			Matrix result{};
+			for(int y = 0; y < H; y++)
+				for(int x = 0; x < W; x++)
+					result.data[y][x] = mat.data[y][x] / value;
+			return result;
+		}
+
+		template <P1::concepts::Number _T>
 		Matrix& operator /= (const _T& value) {
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
@@ -210,7 +219,7 @@ namespace P1::math {
 			return Vector3(data[0][0], data[1][0], data[2][0]);
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Matrix operator = (const Matrix<_T, W, H>& other) {
 			data = other.data;
 			return *this;

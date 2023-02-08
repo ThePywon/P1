@@ -24,42 +24,42 @@ public:
 	T operator = (const _T& v) { return *value = static_cast<T>(v); }
 	friend std::ostream& operator << (std::ostream& os, const Proxy& p) { return os << *p.value; }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
 	T operator + (const _T& v) { return *value + v; }
 	template <typename _T>
 	T operator + (const Proxy<_T>& p) { return *value + (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
+	friend _T operator + (const Proxy<T>& p, const _T& v) { return v + *p.value; }
+	template <typename _T>
 	T operator - (const _T& v) { return *value - v; }
 	template <typename _T>
 	T operator - (const Proxy<_T>& p) { return *value - (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
+	friend _T operator - (const Proxy<T>& p, const _T& v) { return v - *p.value; }
+	template <typename _T>
 	T operator * (const _T& v) { return *value * v; }
 	template <typename _T>
 	T operator * (const Proxy<_T>& p) { return *value * (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
+	friend _T operator * (const Proxy<T>& p, const _T& v) { return v * *p.value; }
+	template <typename _T>
 	T operator / (const _T& v) { return *value / v; }
 	template <typename _T>
 	T operator / (const Proxy<_T>& p) { return *value / (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
+	friend _T operator / (const Proxy<T>& p, const _T& v) { return v / *p.value; }
+	template <typename _T>
 	T operator += (const _T& v) { return *value += v; }
 	template <typename _T>
 	T operator += (const Proxy<_T>& p) { return *value += (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
 	T operator -= (const _T& v) { return *value -= v; }
 	template <typename _T>
 	T operator -= (const Proxy<_T>& p) { return *value -= (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
 	T operator *= (const _T& v) { return *value *= v; }
 	template <typename _T>
 	T operator *= (const Proxy<_T>& p) { return *value *= (*p.value); }
 	template <typename _T>
-	requires P1::concepts::Number<_T>
 	T operator /= (const _T& v) { return *value /= v; }
 	template <typename _T>
 	T operator /= (const Proxy<_T>& p) { return *value /= (*p.value); }

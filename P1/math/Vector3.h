@@ -8,10 +8,9 @@
 #include "../concepts/MathConcepts.h"
 
 namespace P1::math {
-	template <typename T, unsigned int W, unsigned int H> class Matrix;
+	template <P1::concepts::Number T, unsigned int W, unsigned int H> class Matrix;
 
-	template <typename T = double>
-	requires P1::concepts::Number<T>
+	template <P1::concepts::Number T = double>
 	class Vector3 : public Matrix<T, 1, 4> {
 	public:
 		unsigned int width() = delete;
@@ -41,7 +40,7 @@ namespace P1::math {
 			Proxy<T>::set_ref(this->y, this->data[1][0]);
 			Proxy<T>::set_ref(this->z, this->data[2][0]);
 		}
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3(const Vector3<_T>& other) : Matrix<T, 1, 4>() {
 			this->data[0][0] = static_cast<T>(other.data[0][0]);
 			this->data[1][0] = static_cast<T>(other.data[1][0]);
@@ -53,8 +52,15 @@ namespace P1::math {
 			Proxy<T>::set_ref(z, this->data[2][0]);
 		}
 
-		inline static Vector3<T> zero() { return Vector3<T>(); }
-		inline static Vector3<T> one() { return Vector3<T>(1, 1, 1); }
+		static Vector3<T> zero() { return Vector3<T>(); }
+		static Vector3<T> one() { return Vector3<T>(1, 1, 1); }
+
+		Matrix<T, 4, 4> to_scale_matrix() {
+			return Matrix<T, 4, 4>::scale(x, y, z);
+		}
+		Matrix<T, 4, 4> to_translate_matrix() {
+			return Matrix<T, 4, 4>::translate(x, y, z);
+		}
 
 		double get_magnitude() {
 			return hypot(hypot(x, y), z);
@@ -73,19 +79,19 @@ namespace P1::math {
 			return Vector3<T>(*this);
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 cross(const Vector3<_T>& other) {
 			return Vector3(y * other.z - z * other.y,
 				z * other.x - x * other.z, x * other.y - y * other.x);
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator + (const Vector3<_T>& other) {
 			return Vector3(x + other.x, y + other.y, z + other.z);
 		}
 		inline Vector3 operator + () { return Vector3(+x, +y, +z); }
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator += (const Vector3<_T>& other) {
 			x += other.x;
 			y += other.y;
@@ -93,13 +99,13 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator - (const Vector3<_T>& other) {
 			return Vector3(x - other.x, y - other.y, z - other.z);
 		}
 		inline Vector3 operator - () { return Vector3(-x, -y, -z); }
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator -= (const Vector3<_T>& other) {
 			x -= other.x;
 			y -= other.y;
@@ -107,12 +113,12 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		double operator * (const Vector3<_T>& other) {
 			return x * other.x + y * other.y + z * other.z;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator /= (const _T& value) {
 			x /= value;
 			y /= value;
@@ -120,12 +126,12 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator / (const _T& value) {
 			return Vector3(x / value, y / value, z / value);
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator *= (const _T& value) {
 			x *= value;
 			y *= value;
@@ -133,7 +139,7 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <typename _T>
+		template <P1::concepts::Number _T>
 		Vector3 operator * (const _T& value) {
 			return Vector3(x * value, y * value, z * value);
 		}

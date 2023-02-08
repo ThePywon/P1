@@ -9,8 +9,8 @@
 namespace P1::inputs {
 	class Axis {
 	private:
+		friend void get_raw(Axis* axis);
 		friend void update(Axis* axis);
-		friend void getRaw(Axis* axis);
 		std::shared_ptr<InputListener> context;
 		std::vector<int> positives;
 		std::vector<int> negatives;
@@ -26,8 +26,9 @@ namespace P1::inputs {
 		double dead = 0.01;
 		double smoothness = 5;
 
-		Axis(P1::graphics::Window* window, std::vector<int> positives,
+		Axis(graphics::Window* window, std::vector<int> positives,
 				std::vector<int> negatives);
+		Axis(graphics::Window* window, int positive, int negative);
 
 		inline int raw() { return m_raw; }
 		inline double linear() { return m_linear; }
@@ -36,14 +37,12 @@ namespace P1::inputs {
 
 	class Axis2D {
 	private:
-		friend void update(Axis2D* axis);
-		friend void getRaw(Axis2D* axis);
-
 		std::unique_ptr<Axis> x;
 		std::unique_ptr<Axis> y;
 	public:
-		Axis2D(P1::graphics::Window* window, std::vector<int> left, std::vector<int> up,
+		Axis2D(graphics::Window* window, std::vector<int> left, std::vector<int> up,
 				std::vector<int> right, std::vector<int> down);
+		Axis2D(graphics::Window* window, int left, int up, int right, int down);
 
 		inline P1::math::Vector2<double> raw() { return P1::math::Vector2<double>(x->raw(), y->raw()).clamped(); }
 		inline P1::math::Vector2<double> linear() { return P1::math::Vector2<double>(x->linear(), y->linear()).clamped(); }

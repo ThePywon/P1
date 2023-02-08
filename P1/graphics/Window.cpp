@@ -1,11 +1,9 @@
-#include <GLFW/glfw3.h>
-#include <functional>
 #include "Window.h"
-#include "../inputs/InputManager.h"
-#include "../events/EventManager.h"
+#include <functional>
+#include "../systems/MainManager.h"
 
 namespace P1 { namespace graphics {
-
+/*
 	void WindowManager::start() {
 		while(windows.size() > 0) {
 			std::list<Window*>::iterator badwindow = windows.end();
@@ -19,7 +17,7 @@ namespace P1 { namespace graphics {
 					glfwSetKeyCallback((*w)->glfwWindow, P1::inputs::InputManager::keyCallback);
 					glfwSetMouseButtonCallback((*w)->glfwWindow, P1::inputs::InputManager::mouseButtonCallback);
 					glfwSetCursorPosCallback((*w)->glfwWindow, P1::inputs::InputManager::cursorPosCallback);
-					(*w)->eventManager->emit("start");
+					(*w)->event_manager->emit(WINDOW_START_EVENT);
 					(*w)->state = VALID_WINDOW;
 				}
 				else {
@@ -38,8 +36,8 @@ namespace P1 { namespace graphics {
 
 		glfwTerminate();
 	}
-
-	Window::Window(const char* name, int width, int height) {
+*/
+	Window::Window(use_create_method assertion, const char* name, int width, int height) {
 		this->name = name;
 		this->width = width;
 		this->height = height;
@@ -50,18 +48,23 @@ namespace P1 { namespace graphics {
 		}
 		glfwMakeContextCurrent(NULL);
 
-		eventManager = std::make_unique<P1::events::EventManager<std::string>>();
-		inputListener = std::make_shared<P1::inputs::InputListener>(this);
+		event_manager = std::make_unique<events::EventManager<int>>();
+		input_listener = std::make_shared<inputs::InputListener>(this);
+	}
 
-		WindowManager::windows.push_back(this);
+	Window* Window::create(const char* name, int width, int height) {
+		std::shared_ptr<Window> window = std::make_shared<Window>(use_create_method{}, name, width, height);
+		systems::MainManager::windows.push_back(window);
+		return window.get();
 	}
 
 	void Window::update() {
 		glfwMakeContextCurrent(glfwWindow);
-		eventManager->emit("update");
+		event_manager->emit(WINDOW_UPDATE_EVENT);
 		glfwSwapBuffers(glfwWindow);
 		glfwGetFramebufferSize(glfwWindow, &this->width, &this->height);
 		glfwPollEvents();
+		glfwMakeContextCurrent(NULL);
 	}
 
 	bool Window::init() {
@@ -74,5 +77,6 @@ namespace P1 { namespace graphics {
 	void Window::clear() const {
 		glfwMakeContextCurrent(glfwWindow);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glfwMakeContextCurrent(NULL);
 	}
 }}
