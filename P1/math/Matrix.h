@@ -15,22 +15,41 @@ namespace P1::math {
 
 	template <P1::concepts::Number T, unsigned int W, unsigned int H = W>
 	class Matrix {
-	protected:
-		std::vector<std::vector<T>> data;
 	public:
-		inline unsigned int width() { return W; }
-		inline unsigned int height() { return H; }
+		T data[H][W];
+
+		static constexpr unsigned int width = W;
+		static constexpr unsigned int height = H;
 
 		Matrix() {
 			static_assert(W != 0 && H != 0);
 
-			for(int y = 0; y < H; y++) {
-				std::vector<T> result;
+			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
-					result.push_back(0);
-				data.push_back(result);
+					data[y][x] = 0;
+		}
+
+		template <P1::concepts::IS<T>... Args>
+		Matrix(Args... args) {
+			static_assert(W != 0 && H != 0);
+			static_assert(sizeof...(args) == W * H);
+
+			int index = 0;
+			T values[] = { static_cast<T>(args)... };
+
+			for(auto arg : values) {
+				data[index / W][index % W] = arg;
+				index++;
 			}
 		}
+
+		Matrix(T args[H][W]) {
+			static_assert(W != 0 && H != 0);
+
+			data = args;
+		}
+
+		static constexpr bool is_square = W == H;
 
 		static Matrix identity() {
 			static_assert(W != 0 && H != 0 && W == H);
@@ -87,6 +106,14 @@ namespace P1::math {
 			assert(x < W && y < H);
 
 			return data[y][x];
+		}
+
+		Matrix<T, H, W> transpose() {
+			Matrix<T, H, W> result{};
+			for(int y = 0; y < H; y++)
+				for(int x = 0; x < W; x++)
+					result.data[x][y] = this->data[y][x];
+			return result;
 		}
 
 		template <P1::concepts::Number _T>
@@ -156,12 +183,11 @@ namespace P1::math {
 			return result;
 		}
 
-		template <P1::concepts::Number _T, unsigned int _W, unsigned int _H = _W>
-		Matrix operator * (const Matrix<_T, _W, _H>& other) {
-			static_assert(W == _H);
+		template <P1::concepts::Number _T, unsigned int _W>
+		Matrix<T, _W, H> operator * (const Matrix<_T, _W, W>& other) {
 
 			Matrix<T, _W, H> result{};
-			for(int y = 0; y < _H; y++) {
+			for(int y = 0; y < H; y++) {
 				for(int x = 0; x < _W; x++) {
 					T value = 0;
 					for(int i = 0; i < W; i++)
@@ -227,9 +253,9 @@ namespace P1::math {
 
 		static std::string to_string(const Matrix& mat) {
 			std::string result;
-			for(int y = 0; y < mat.data.size(); y++) {
+			for(int y = 0; y < H; y++) {
 				result += y > 0 ? "\n[" : "[";
-				for(int x = 0; x < mat.data[0].size(); x++)
+				for(int x = 0; x < W; x++)
 					result += ' ' + std::to_string(mat.data[y][x]);
 				result += " ]";
 			}

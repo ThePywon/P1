@@ -27,10 +27,14 @@ using namespace components;
 using namespace systems;
 
 Window* window;
-Window* testwindow;
-Window* testwindow2;
 
 std::unique_ptr<Axis2D> Arrows;
+
+Matrix<int, 4, 2> A{1, 2, 3, 4, 5, 6, 7, 8};
+Matrix<int, 1, 4> B{7, -3, 0, -1};
+Matrix<int, 3, 2> C{3, 0, 4, 2, -1, -8};
+Matrix<int, 3> D = Matrix<int, 3>::identity();
+Matrix<int, 3> E{7, 8, -4, -4, 1, -4, 2, 9, 3};
 
 Scene scene{};
 /*
@@ -45,6 +49,21 @@ LineRendererComponent* sLine = sObj->add_component<LineRendererComponent>();
 void start();
 void update();
 int main(int argc, char *argv[]) {
+
+	std::cout << (D + E) << std::endl << std::endl;
+	//std::cout << (A + B) << std::endl << std::endl; INVALID
+	std::cout << (D - E) << std::endl << std::endl;
+	std::cout << (-2 * B) << std::endl << std::endl;
+	std::cout << (A * B) << std::endl << std::endl;
+	//std::cout << (B * A) << std::endl << std::endl; INVALID
+	std::cout << A.transpose() << std::endl << std::endl;
+	std::cout << B.transpose() << std::endl << std::endl;
+	std::cout << D.transpose() << std::endl << std::endl;
+	std::cout << (C * D) << std::endl << std::endl;
+	std::cout << (C.transpose() * C) << std::endl << std::endl;
+	std::cout << (C * C.transpose()) << std::endl << std::endl;
+
+/*
 	// Init glfw
 	if(!glfwInit()) return 1;
 
@@ -54,13 +73,7 @@ int main(int argc, char *argv[]) {
 
 	// Init windows
 	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
-	std::cout << "#1" << std::endl;
 	window = Window::create("test", 600, 600);
-	std::cout << "#2" << std::endl;
-	testwindow = Window::create("actual test", 600, 600);
-	std::cout << "#3" << std::endl;
-	testwindow2 = Window::create("actual test #2", 600, 600);
-	std::cout << "#4" << std::endl;
 
 	Arrows = std::make_unique<Axis2D>(&*window, GLFW_KEY_LEFT, GLFW_KEY_UP, GLFW_KEY_RIGHT, GLFW_KEY_DOWN);
 
@@ -77,25 +90,15 @@ int main(int argc, char *argv[]) {
 	rLine->color = SolidColor<float>(1, 0, 0);
 	lLine->color = SolidColor<float>(0, 1, 0);
 	sLine->color = SolidColor<float>(0, 0, 1);
-*/
+
 	// Create event listeners
 	window->event_manager->on(WINDOW_START_EVENT, start);
-	std::cout << "#5" << std::endl;
 	window->event_manager->on(WINDOW_UPDATE_EVENT, update);
-	std::cout << "#6" << std::endl;
-	testwindow->event_manager->on(WINDOW_START_EVENT, start);
-	std::cout << "#7" << std::endl;
-	testwindow->event_manager->on(WINDOW_UPDATE_EVENT, update);
-	std::cout << "#8" << std::endl;
-	testwindow2->event_manager->on(WINDOW_START_EVENT, start);
-	std::cout << "#9" << std::endl;
-	testwindow2->event_manager->on(WINDOW_UPDATE_EVENT, update);
-	std::cout << "#10" << std::endl;
 
 	MainManager::add_system<LineRenderer>();
 
 	// Start update loop
-	MainManager::init();
+	MainManager::init();*/
 
 	return 0;
 }
@@ -103,10 +106,7 @@ int main(int argc, char *argv[]) {
 // Start callback
 void start() {
 	std::cout << "Start!" << std::endl;
-	auto init = glewInit();
-	std::cout << init << std::endl;
-	std::cout << glewGetString(true) << std::endl;
-	if(init != GLEW_OK) std::cout << "NOT OK" << std::endl;
+	glewInit();
 }
 
 void update() {
