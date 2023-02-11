@@ -2,41 +2,7 @@
 #include <functional>
 #include "../systems/MainManager.h"
 
-namespace P1 { namespace graphics {
-/*
-	void WindowManager::start() {
-		while(windows.size() > 0) {
-			std::list<Window*>::iterator badwindow = windows.end();
-			for(std::list<Window*>::iterator w = windows.begin(); w != windows.end(); ++w) {
-				if(glfwWindowShouldClose((*w)->glfwWindow)) {
-					(*w)->state = INVALID_WINDOW;
-					glfwDestroyWindow((*w)->glfwWindow);
-					badwindow = w;
-				}
-				else if((*w)->state == NEW_WINDOW) {
-					glfwSetKeyCallback((*w)->glfwWindow, P1::inputs::InputManager::keyCallback);
-					glfwSetMouseButtonCallback((*w)->glfwWindow, P1::inputs::InputManager::mouseButtonCallback);
-					glfwSetCursorPosCallback((*w)->glfwWindow, P1::inputs::InputManager::cursorPosCallback);
-					(*w)->event_manager->emit(WINDOW_START_EVENT);
-					(*w)->state = VALID_WINDOW;
-				}
-				else {
-					int width, height;
-					glfwMakeContextCurrent((*w)->glfwWindow);
-					glfwGetWindowSize((*w)->glfwWindow, &width, &height);
-					glViewport(0, 0, width, height);
-					(*w)->update();
-				}
-			}
-			if(badwindow != windows.end()) {
-				windows.erase(badwindow);
-				badwindow = windows.end();
-			}
-		}
-
-		glfwTerminate();
-	}
-*/
+namespace P1::graphics {
 	Window::Window(use_create_method assertion, const char* name, int width, int height) {
 		this->name = name;
 		this->width = width;
@@ -58,15 +24,6 @@ namespace P1 { namespace graphics {
 		return window.get();
 	}
 
-	void Window::update() {
-		glfwMakeContextCurrent(glfwWindow);
-		event_manager->emit(WINDOW_UPDATE_EVENT);
-		glfwSwapBuffers(glfwWindow);
-		glfwGetFramebufferSize(glfwWindow, &this->width, &this->height);
-		glfwPollEvents();
-		glfwMakeContextCurrent(NULL);
-	}
-
 	bool Window::init() {
 		glfwWindow = glfwCreateWindow(width, height, name, NULL, NULL);
 		if(!glfwWindow) return false;
@@ -75,8 +32,9 @@ namespace P1 { namespace graphics {
 	}
 
 	void Window::clear() const {
+		GLFWwindow* prev_context = glfwGetCurrentContext();
 		glfwMakeContextCurrent(glfwWindow);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glfwMakeContextCurrent(NULL);
+		glfwMakeContextCurrent(prev_context);
 	}
-}}
+}

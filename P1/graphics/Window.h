@@ -19,23 +19,15 @@ namespace P1::systems { class MainManager; }
 #define WINDOW_UPDATE_EVENT 1
 
 namespace P1::graphics {
-/*
-	class Window;
-	class WindowManager {
-	private:
-		friend Window;
-		inline static std::list<Window*> windows{};
-	public:
-		static void start();
-	};
-*/
 	class Window : std::enable_shared_from_this<Window> {
 	private:
 		int width, height;
 
 		friend systems::MainManager;
 		friend P1::inputs::InputListener;
+	public:
 		GLFWwindow* glfwWindow;
+	private:
 		int state = NEW_WINDOW;
 
 		struct use_create_method {
@@ -52,8 +44,6 @@ namespace P1::graphics {
 		static Window* create(const char* name, int width, int height);
 
 		void clear() const;
-
-		void update();
 
 		inline bool isValid() const {
 			return state != INVALID_WINDOW;
