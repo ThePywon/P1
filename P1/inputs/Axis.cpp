@@ -1,7 +1,4 @@
-#include <GLFW/glfw3.h>
 #include "Axis.h"
-#include "InputManager.h"
-#include "../graphics/Window.h"
 
 namespace P1 { namespace inputs {
 	void get_raw(Axis* axis);

@@ -79,19 +79,19 @@ namespace P1::math {
 			return Vector3<T>(*this);
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 cross(const Vector3<_T>& other) {
 			return Vector3(y * other.z - z * other.y,
 				z * other.x - x * other.z, x * other.y - y * other.x);
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator + (const Vector3<_T>& other) {
 			return Vector3(x + other.x, y + other.y, z + other.z);
 		}
 		inline Vector3 operator + () { return Vector3(+x, +y, +z); }
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator += (const Vector3<_T>& other) {
 			x += other.x;
 			y += other.y;
@@ -99,13 +99,13 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator - (const Vector3<_T>& other) {
 			return Vector3(x - other.x, y - other.y, z - other.z);
 		}
 		inline Vector3 operator - () { return Vector3(-x, -y, -z); }
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator -= (const Vector3<_T>& other) {
 			x -= other.x;
 			y -= other.y;
@@ -113,12 +113,12 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		double operator * (const Vector3<_T>& other) {
 			return x * other.x + y * other.y + z * other.z;
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator /= (const _T& value) {
 			x /= value;
 			y /= value;
@@ -126,12 +126,16 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator / (const _T& value) {
 			return Vector3(x / value, y / value, z / value);
 		}
 
-		template <P1::concepts::Number _T>
+		friend Vector3 operator / (const T& value, const Vector3& v3) {
+			return Vector3(value / v3.data[0][0], value / v3.data[0][1], value / v3.data[0][2]);
+		}
+
+		template <concepts::Number _T>
 		Vector3 operator *= (const _T& value) {
 			x *= value;
 			y *= value;
@@ -139,7 +143,7 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
 		Vector3 operator * (const _T& value) {
 			return Vector3(x * value, y * value, z * value);
 		}

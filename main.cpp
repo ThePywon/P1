@@ -1,5 +1,9 @@
+#ifndef GL_INCLUDED
+#define GL_INCLUDED
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#endif
+
 #include <memory>
 #include "P1/math/Vector2.h"
 #include "P1/math/Vector3.h"
@@ -41,8 +45,12 @@ LineRendererComponent* lLine = lObj->add_component<LineRendererComponent>();
 LineRendererComponent* sLine = sObj->add_component<LineRendererComponent>();
 */
 
+Entity* camera = Entity::create(&scene, "Camera");
 Entity* test_lines = Entity::create(&scene, "Test Lines");
 
+Transform<>* camera_transform;
+Viewport* camera_viewport;
+Transform<>* line_transform;
 LineRendererComponent* line_rend;
 
 void glew_setup();
@@ -93,6 +101,7 @@ void glew_setup() {
 	int state = glewInit();
 	if(state == GLEW_OK) {
 		std::cout << "Glew initialized successfully." << std::endl;
+		std::cout << "Currently using: " << glGetString(GL_VERSION) << std::endl;
 	}
 	else {
 		std::cout << "ERROR::GLEW::NOT_OK\n" << glewGetErrorString(state) << std::endl;
@@ -103,6 +112,12 @@ void glew_setup() {
 void start() {
 	std::cout << "Start event called!" << std::endl;
 
+	test_lines->materials.push_back(std::make_shared<Material>());
+
+	camera_transform = camera->add_component<Transform<>>();
+	//camera_transform->position.x = 0.5;
+	camera_viewport = camera->add_component<Viewport>();
+	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
 }

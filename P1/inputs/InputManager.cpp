@@ -1,9 +1,5 @@
-#include <GLFW/glfw3.h>
 #include <algorithm>
 #include "InputManager.h"
-#include "../graphics/Window.h"
-#include "../math/Vector2.h"
-#include "../events/EventManager.h"
 
 #define MAX_KEYS 1024
 #define MAX_MOUSE_BUTTONS 32

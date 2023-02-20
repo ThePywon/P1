@@ -1,5 +1,10 @@
 #pragma once
+
+#ifndef GL_INCLUDED
+#define GL_INCLUDED
 #include <GLFW/glfw3.h>
+#endif
+
 #include <vector>
 #include <memory>
 #include "InputManager.h"

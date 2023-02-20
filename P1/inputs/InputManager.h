@@ -1,5 +1,10 @@
 #pragma once
+
+#ifndef GL_INCLUDED
+#define GL_INCLUDED
 #include <GLFW/glfw3.h>
+#endif
+
 #include "../graphics/Window.h"
 #include "../math/Vector2.h"
 #include "../events/EventManager.h"

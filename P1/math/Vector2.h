@@ -127,9 +127,8 @@ namespace P1::math {
 			return Vector2(x / value, y / value);
 		}
 
-		template <P1::concepts::Number _T>
-		friend Vector2 operator / (const _T& value, const Vector2& v2) {
-			return Vector2(v2.x / value, v2.y / value);
+		friend Vector2 operator / (const T& value, const Vector2& v2) {
+			return Vector2(value / v2.data[0][0], value / v2.data[0][1]);
 		}
 
 		template <P1::concepts::Number _T>

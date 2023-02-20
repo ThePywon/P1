@@ -29,7 +29,7 @@ namespace P1::math {
 					data[y][x] = 0;
 		}
 
-		template <P1::concepts::IS<T>... Args>
+		template <concepts::IS<T>... Args>
 		Matrix(Args... args) {
 			static_assert(W != 0 && H != 0);
 			static_assert(sizeof...(args) == W * H);
@@ -60,7 +60,7 @@ namespace P1::math {
 			return result;
 		}
 
-		template <P1::concepts::IS<T>... Args>
+		template <concepts::IS<T>... Args>
 		requires(W != 0 && H != 0 && W == H)
 		static Matrix scale(Args... args) {
 			static_assert(sizeof...(args) + 1 == W);
@@ -78,7 +78,22 @@ namespace P1::math {
 			return result;
 		}
 
-		template <P1::concepts::IS<T>... Args>
+		static Matrix scale(Vector2<T> v2) {
+			static_assert(W == 3 && H == 3);
+			return Matrix{ *v2.x, (T)0, (T)0,
+										 (T)0, *v2.y, (T)0,
+										 (T)0, (T)0, (T)1 };
+		}
+
+		static Matrix scale(Vector3<T> v3) {
+			static_assert(W == 4 && H == 4);
+			return Matrix{ *v3.x, (T)0, (T)0, (T)0,
+										 (T)0, *v3.y, (T)0, (T)0,
+										 (T)0, (T)0, *v3.z, (T)0,
+										 (T)0, (T)0, (T)0, (T)1 };
+		}
+
+		template <concepts::IS<T>... Args>
 		requires(W != 0 && H != 0 && W == H)
 		static Matrix translate(Args... args) {
 			static_assert(sizeof...(args) + 1 == W);
@@ -95,6 +110,21 @@ namespace P1::math {
 				result.data[i][i] = 1;
 
 			return result;
+		}
+
+		static Matrix translate(Vector2<T> v2) {
+			static_assert(W == 3 && H == 3);
+			return Matrix{ (T)1, (T)0, *v2.x,
+										 (T)0, (T)1, *v2.y,
+										 (T)0, (T)0, (T)1 };
+		}
+
+		static Matrix translate(Vector3<T> v3) {
+			static_assert(W == 4 && H == 4);
+			return Matrix{ (T)1, (T)0, (T)0, *v3.x,
+										 (T)0, (T)1, (T)0, *v3.y,
+										 (T)0, (T)0, (T)1, *v3.z,
+										 (T)0, (T)0, (T)0, (T)1 };
 		}
 
 		double& operator () (unsigned int x, unsigned int y) {
@@ -221,7 +251,7 @@ namespace P1::math {
 			Matrix result{};
 			for(int y = 0; y < H; y++)
 				for(int x = 0; x < W; x++)
-					result.data[y][x] = mat.data[y][x] / value;
+					result.data[y][x] = value / mat.data[y][x];
 			return result;
 		}
 
