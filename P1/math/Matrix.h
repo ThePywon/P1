@@ -13,6 +13,9 @@ namespace P1::math {
 	template <P1::concepts::Number T> class Vector2;
 	template <P1::concepts::Number T> class Vector3;
 
+	#define ROW_MAJOR 0
+	#define COLUMN_MAJOR 1
+
 	template <P1::concepts::Number T, unsigned int W, unsigned int H = W>
 	class Matrix {
 	public:
@@ -93,7 +96,7 @@ namespace P1::math {
 										 (T)0, (T)0, (T)0, (T)1 };
 		}
 
-		template <concepts::IS<T>... Args>
+		template <unsigned int M = ROW_MAJOR, concepts::IS<T>... Args>
 		requires(W != 0 && H != 0 && W == H)
 		static Matrix translate(Args... args) {
 			static_assert(sizeof...(args) + 1 == W);
@@ -102,9 +105,17 @@ namespace P1::math {
 			int index = 0;
 			T values[] = { static_cast<T>(args)... };
 
-			for(auto arg : values) {
-				result.data[index][W-1] = arg;
-				index++;
+			if(M == ROW_MAJOR) {
+				for(auto arg : values) {
+					result.data[index][W-1] = arg;
+					index++;
+				}
+			}
+			else {
+				for(auto arg : values) {
+					result.data[H-1][index] = arg;
+					index++;
+				}
 			}
 			for(int i = 0; i < W; i++)
 				result.data[i][i] = 1;
@@ -112,19 +123,32 @@ namespace P1::math {
 			return result;
 		}
 
+		template <unsigned int M = ROW_MAJOR>
+		requires(W == 3 && H == 3)
 		static Matrix translate(Vector2<T> v2) {
-			static_assert(W == 3 && H == 3);
-			return Matrix{ (T)1, (T)0, *v2.x,
-										 (T)0, (T)1, *v2.y,
-										 (T)0, (T)0, (T)1 };
+			if(M == ROW_MAJOR)
+				return Matrix{ (T)1, (T)0, *v2.x,
+											 (T)0, (T)1, *v2.y,
+											 (T)0, (T)0, (T)1 };
+
+			return Matrix{ (T)1, (T)0, (T)0,
+										 (T)0, (T)1, (T)0,
+										 *v2.x, *v2.y, (T)1 };
 		}
 
+		template <unsigned int M = ROW_MAJOR>
+		requires(W == 4 && H == 4)
 		static Matrix translate(Vector3<T> v3) {
-			static_assert(W == 4 && H == 4);
-			return Matrix{ (T)1, (T)0, (T)0, *v3.x,
-										 (T)0, (T)1, (T)0, *v3.y,
-										 (T)0, (T)0, (T)1, *v3.z,
-										 (T)0, (T)0, (T)0, (T)1 };
+			if(M == ROW_MAJOR)
+				return Matrix{ (T)1, (T)0, (T)0, *v3.x,
+											 (T)0, (T)1, (T)0, *v3.y,
+											 (T)0, (T)0, (T)1, *v3.z,
+											 (T)0, (T)0, (T)0, (T)1 };
+
+			return Matrix{ (T)1, (T)0, (T)0, (T)0,
+										 (T)0, (T)1, (T)0, (T)0,
+										 (T)0, (T)0, (T)1, (T)0,
+										 *v3.x, *v3.y, *v3.z, (T)1 };
 		}
 
 		double& operator () (unsigned int x, unsigned int y) {
@@ -213,10 +237,10 @@ namespace P1::math {
 			return result;
 		}
 
-		template <P1::concepts::Number _T, unsigned int _W>
+		template <concepts::Number _T, unsigned int _W>
 		Matrix<T, _W, H> operator * (const Matrix<_T, _W, W>& other) {
-
 			Matrix<T, _W, H> result{};
+
 			for(int y = 0; y < H; y++) {
 				for(int x = 0; x < _W; x++) {
 					T value = 0;
@@ -237,7 +261,24 @@ namespace P1::math {
 			return *this;
 		}
 
-		template <P1::concepts::Number _T>
+		template <concepts::Number _T>
+		requires(W == H)
+		Matrix& operator *= (const Matrix<_T, W>& other) {
+			Matrix<_T, W> result{};
+
+			for(int y = 0; y < H; y++) {
+				for(int x = 0; x < W; x++) {
+					T value = 0;
+					for(int i = 0; i < W; i++)
+						value += this->data[y][i] * other.data[i][x];
+					result.data[y][x] = value;
+				}
+			}
+
+			return result;
+		}
+
+		template <concepts::Number _T>
 		Matrix operator / (const _T& value) {
 			Matrix result{};
 			for(int y = 0; y < H; y++)

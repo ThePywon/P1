@@ -68,7 +68,7 @@ fetchFiles() {
 for var in "$@"
 do
 	# Purge prior files if any
-	if [ "$var" == "-r" ] || [ "$var" == "--remove" ]
+	if [ "$var" == "-p" ] || [ "$var" == "--purge" ]
 	then
 		objects=`ls .`
 		if [ "${#objects}" -gt 0 ]

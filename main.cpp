@@ -32,7 +32,7 @@ using namespace systems;
 
 Window* window;
 
-//std::unique_ptr<Axis2D> Arrows;
+std::unique_ptr<Axis2D> Arrows;
 
 Scene scene{};
 /*
@@ -57,6 +57,7 @@ void glew_setup();
 void start();
 void update();
 int main(int argc, char *argv[]) {
+
 	// Init glfw
 	if(!glfwInit()) return 1;
 
@@ -68,7 +69,7 @@ int main(int argc, char *argv[]) {
 	glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, GLFW_TRUE);
 	window = Window::create("test", 600, 600);
 
-	//Arrows = std::make_unique<Axis2D>(&*window, GLFW_KEY_LEFT, GLFW_KEY_UP, GLFW_KEY_RIGHT, GLFW_KEY_DOWN);
+	Arrows = std::make_unique<Axis2D>(&*window, GLFW_KEY_LEFT, GLFW_KEY_UP, GLFW_KEY_RIGHT, GLFW_KEY_DOWN);
 /*
 	rLine->vertices.push_back(0);
 	rLine->vertices.push_back(0);
@@ -115,7 +116,6 @@ void start() {
 	test_lines->materials.push_back(std::make_shared<Material>());
 
 	camera_transform = camera->add_component<Transform<>>();
-	//camera_transform->position.x = 0.5;
 	camera_viewport = camera->add_component<Viewport>();
 	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
@@ -125,6 +125,9 @@ void start() {
 void update() {
 	glClearColor(0, 0, 0, 0);
 	window->clear();
+
+	line_transform->position.x = *Arrows->smooth().x;
+	line_transform->position.y = *Arrows->smooth().y;
 
 	/*rLine->vertices[1] = Arrows->raw();
 	lLine->vertices[1] = Arrows->linear();
