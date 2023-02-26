@@ -49,10 +49,11 @@ namespace P1::math {
 		static Vector2<T> one() { return Vector2<T>(1, 1); }
 
 		Matrix<T, 3> to_scale_matrix() {
-			return Matrix<T, 3>::scale(x, y);
+			return Matrix<T, 3>::scale(this->data[0][0], this->data[0][1]);
 		}
+		template <unsigned int M = 0>
 		Matrix<T, 3> to_translate_matrix() {
-			return Matrix<T, 3>::translate(x, y);
+			return Matrix<T, 3>::template translate<M>(this->data[0][0], this->data[0][1]);
 		}
 
 		template <typename _T>

@@ -56,10 +56,11 @@ namespace P1::math {
 		static Vector3<T> one() { return Vector3<T>(1, 1, 1); }
 
 		Matrix<T, 4, 4> to_scale_matrix() {
-			return Matrix<T, 4, 4>::scale(x, y, z);
+			return Matrix<T, 4, 4>::scale(this->data[0][0], this->data[0][1], this->data[0][2]);
 		}
+		template <unsigned int M>
 		Matrix<T, 4, 4> to_translate_matrix() {
-			return Matrix<T, 4, 4>::translate(x, y, z);
+			return Matrix<T, 4, 4>::template translate<M>(this->data[0][0], this->data[0][1], this->data[0][2]);
 		}
 
 		double get_magnitude() {

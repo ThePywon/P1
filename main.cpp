@@ -128,6 +128,7 @@ void update() {
 
 	line_transform->position.x = *Arrows->smooth().x;
 	line_transform->position.y = *Arrows->smooth().y;
+	camera_transform->position.x = 0.5;
 
 	/*rLine->vertices[1] = Arrows->raw();
 	lLine->vertices[1] = Arrows->linear();
