@@ -23,6 +23,8 @@ namespace P1::graphics { class Material; }
 
 namespace P1::systems { class MainManager; }
 
+namespace P1::components { class GarbageCollectorBase; }
+
 namespace P1::entity {
 	// Entity id generator method declaration
 	extern unsigned int entity_id_counter;
@@ -35,6 +37,8 @@ namespace P1::entity {
 		friend Entity;
 		friend systems::MainManager;
 		std::vector<std::shared_ptr<Entity>> entities{};
+		unsigned int garbage_collector_mask = 0;
+		std::vector<std::shared_ptr<components::GarbageCollectorBase>> garbage_collectors{};
 		std::vector<std::pair<unsigned int, unsigned int>> garbage{};
 
 		// Store component pools
