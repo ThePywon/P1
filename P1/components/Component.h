@@ -6,7 +6,7 @@
 
 namespace P1::entity { class Scene; class Entity; }
 
-namespace P1::components { 
+namespace P1::components {
 	struct Component {
 	private:
 		// Store entity id and type id
@@ -15,6 +15,8 @@ namespace P1::components {
 		unsigned int entity_id;
 		unsigned int id;
 	public:
+		unsigned int get_entity_id() { return entity_id; }
+
 		// Make polymorphic
 		virtual ~Component() {};
 	};

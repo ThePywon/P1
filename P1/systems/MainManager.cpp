@@ -38,7 +38,7 @@ namespace P1::systems {
 		for(auto scene : scenes) {
 			for(auto system : systems) {
 				// Hook up systems with scene event managers
-				scene->event_manager.funnel([system](entity::Entity* entity){
+				scene->event_manager.funnel([system](entity::Entity* entity) {
 					system->on_signature_change(entity);
 					on_signature_change(entity);
 				});

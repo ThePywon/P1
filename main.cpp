@@ -120,6 +120,11 @@ void start() {
 	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
+	camera_transform->position.x = 0.5;
+
+	Entity* test = Entity::create(&scene, "test");
+	test->add_component<Transform<>>();
+	test->destroy();
 }
 
 void update() {
@@ -128,7 +133,8 @@ void update() {
 
 	line_transform->position.x = *Arrows->smooth().x;
 	line_transform->position.y = *Arrows->smooth().y;
-	camera_transform->position.x = 0.5;
+
+	//test_lines->destroy();
 
 	/*rLine->vertices[1] = Arrows->raw();
 	lLine->vertices[1] = Arrows->linear();
