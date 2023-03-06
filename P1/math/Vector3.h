@@ -33,7 +33,7 @@ namespace P1::math {
 		Vector3(T x, T y): Matrix<T, 1, 4>() {
 			this->data[0][0] = x;
 			this->data[1][0] = y;
-			this->data[2][0] = 1;
+			this->data[2][0] = 0;
 			this->data[3][0] = 1;
 
 			Proxy<T>::set_ref(this->x, this->data[0][0]);

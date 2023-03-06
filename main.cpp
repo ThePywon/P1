@@ -46,6 +46,7 @@ LineRendererComponent* sLine = sObj->add_component<LineRendererComponent>();
 
 Entity* camera = Entity::create(&scene, "Camera");
 Entity* test_lines = Entity::create(&scene, "Test Lines");
+Entity* world_center = Entity::create(&scene, "World Center");
 
 Transform<>* camera_transform;
 Viewport* camera_viewport;
@@ -69,20 +70,7 @@ int main(int argc, char *argv[]) {
 	window = Window::create("test", 600, 600);
 
 	Arrows = std::make_unique<Axis2D>(&*window, GLFW_KEY_LEFT, GLFW_KEY_UP, GLFW_KEY_RIGHT, GLFW_KEY_DOWN);
-/*
-	rLine->vertices.push_back(0);
-	rLine->vertices.push_back(0);
-	rLine->vertices.push_back(0);
-	lLine->vertices.push_back(0);
-	lLine->vertices.push_back(0);
-	lLine->vertices.push_back(0);
-	sLine->vertices.push_back(0);
-	sLine->vertices.push_back(0);
-	sLine->vertices.push_back(0);
-	rLine->color = SolidColor<float>(1, 0, 0);
-	lLine->color = SolidColor<float>(0, 1, 0);
-	sLine->color = SolidColor<float>(0, 0, 1);
-*/
+
 	// Create event listeners
 	window->event_manager->on(WINDOW_START_EVENT, glew_setup);
 	window->event_manager->on(WINDOW_START_EVENT, start);
@@ -111,6 +99,11 @@ void glew_setup() {
 void start() {
 	std::cout << "Start event called!" << std::endl;
 
+	world_center->materials.push_back(std::make_shared<Material>());
+	world_center->add_component<Transform<>>();
+	LineRendererComponent* center_rend = world_center->add_component<LineRendererComponent>();
+	center_rend->color = SolidColor<float>(0, 0, 1);
+
 	test_lines->materials.push_back(std::make_shared<Material>());
 
 	camera_transform = camera->add_component<Transform<>>();
@@ -118,8 +111,7 @@ void start() {
 	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
-	camera_transform->position.x = 0.5;
-	camera_transform->scale = Vector3(2.0f, 2.0f);
+	camera_transform->scale = Vector3(2.0f, 2.0f, 2.0f);
 }
 
 void update() {

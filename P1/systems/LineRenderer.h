@@ -19,6 +19,12 @@ namespace P1::systems {
 
 			components::LineRendererComponent* renderer = entity->get_component<components::LineRendererComponent>();
 
+			if(entity->materials.size() == 0) {
+				std::cout << "[LineRenderer] At entity \"" << entity->name <<
+					"\" #" << entity->id << ": Cannot render lines without a material!" << std::endl;
+				return;
+			}
+
 			entity->materials[0]->set_mesh(renderer->vertices.data(), renderer->vertices.size());
 
 			glUseProgram(entity->materials[0]->program);
@@ -33,7 +39,7 @@ namespace P1::systems {
 				components::Transform<>* camera_transform = MainManager::cameras[i]->get_component<components::Transform<>>();
 				components::Viewport* camera_viewport = MainManager::cameras[i]->get_component<components::Viewport>();
 
-				math::Matrix<float, 4> MVP = t_mat * (1.0f/camera_transform->scale).to_scale_matrix() *
+				math::Matrix<float, 4> MVP = t_mat * (1.0f / camera_transform->scale).to_scale_matrix() *
 				(-camera_transform->position).to_translate_matrix<COLUMN_MAJOR>();
 
 				glUniformMatrix4fv(mvp, 1, GL_FALSE, &MVP.data[0][0]);
