@@ -18,12 +18,11 @@
 #include "../systems/MainManager.h"
 #include "../graphics/Material.h"
 #include "../components/Component.h"
+#include "../components/GarbageCollector.h"
 
 namespace P1::graphics { class Material; }
 
 namespace P1::systems { class MainManager; }
-
-namespace P1::components { class GarbageCollectorBase; }
 
 namespace P1::entity {
 	// Entity id generator method declaration
@@ -37,9 +36,9 @@ namespace P1::entity {
 		friend Entity;
 		friend systems::MainManager;
 		std::vector<std::shared_ptr<Entity>> entities{};
+	public:
 		unsigned int garbage_collector_mask = 0;
-		std::vector<std::shared_ptr<components::GarbageCollectorBase>> garbage_collectors{};
-		std::vector<std::pair<unsigned int, unsigned int>> garbage{};
+		std::unordered_map<unsigned int, std::shared_ptr<components::GarbageCollectorBase>> garbage_collectors;
 
 		// Store component pools
 		std::unordered_map<unsigned int, std::shared_ptr<components::ComponentPoolBase>> component_pools;
@@ -55,9 +54,6 @@ namespace P1::entity {
 		// Get pool from type
 		template <concepts::Component T>
 		std::shared_ptr<components::ComponentPool<T>> get_pool() {
-			// Garbage collect component type
-			garbage_collect<T>();
-
 			// Get component id and base component pool
 			unsigned int id = components::get_component_id<T>();
 			auto base_pool = component_pools[id];
@@ -73,62 +69,21 @@ namespace P1::entity {
 			return pool;
 		}
 
-		// Garbage collect a specific type of component
-		template <concepts::Component T>
-		void garbage_collect() {
-			// Get component id and bitfield values
-			unsigned int id = components::get_component_id<T>();
-			unsigned int bit = 1 << id;
-			// New array to store any sorted garbage
-			std::vector<std::vector<std::pair<unsigned int, unsigned int>>::iterator> sorted_garbage{};
-
-			// Loop over garbage
-			for(auto pair = garbage.begin(); pair != garbage.end(); ++pair) {
-				// Make sure the component type matches the garbage
-				if(!(pair->second & bit)) continue;
-
-				// Get the corresponding component pool
-				auto pool = std::static_pointer_cast<components::ComponentPool<T>>(component_pools[id]);
-				// Loop over the pool
-				for(auto it = pool->components.begin(); it != pool->components.end(); ++it) {
-					// Make sure the specific component matches the garbage
-					if((*it)->entity_id != pair->first) continue;
-
-					// Erase the component
-					pool->components.erase(it);
-					// Check if the garbage matches EXACTLY the component type
-					if(pair->second == bit)
-						// If so, add to the sorted garbage array
-						sorted_garbage.push_back(pair);
-					// Flip the garbage's corresponding component mask bit (entities cannot contain more than one component of a specific type)
-					pair->second ^= bit;
-					// Match found, stop looping
-					break;
-				}
-			}
-
-			// Loop over sorted garbage
-			for(auto it : sorted_garbage) {
-				// Free corresponding entity id
-				freed_ids.push_back(it->first);
-				// Remove from the garbage pile
-				garbage.erase(it);
-			}
-		}
-
 	public:
 		~Scene() {
-			for(auto it = systems::MainManager::scenes.begin(); it != systems::MainManager::scenes.end(); ++it)
-				if(*it == this) {
-					systems::MainManager::scenes.erase(it);
-					return;
-				}
+			for(auto it = systems::MainManager::scenes.begin(); it != systems::MainManager::scenes.end(); ++it) {
+				if(*it != this) continue;
+
+				systems::MainManager::scenes.erase(it);
+				return;
+			}
 		}
 	};
 
 	class Entity : public std::enable_shared_from_this<Entity> {
-	private:
+	public:
 		unsigned int id;
+		std::string name;
 
 		// Pointer to parent scene
 		Scene* scene;
@@ -141,8 +96,6 @@ namespace P1::entity {
 			explicit use_create_method() = default;
 		};
 	public:
-		std::string name;
-		
 		std::vector<std::shared_ptr<graphics::Material>> materials{};
 
 		Entity(use_create_method assertion, const std::string& name, Scene* scene) {
@@ -156,20 +109,32 @@ namespace P1::entity {
 		// Forced alternative constructor
 		static Entity* create(Scene* scene, const std::string& name);
 
+		inline unsigned int get_id() { return id; }
 		inline std::string get_name() { return name; }
 
 		// Remove entity from scene
 		void destroy() {
-			for(auto it = scene->entities.begin(); it != scene->entities.end(); ++it)
-				if((*it)->id == id) {
-					scene->entities.erase(it);
-					scene->garbage.push_back({id, component_mask});
-					return;
+			unsigned int old_mask = component_mask;
+
+			component_mask = 0;
+			scene->event_manager.emit(this);
+
+			for(auto it = scene->entities.begin(); it != scene->entities.end(); ++it) {
+				if((*it)->id != id) continue;
+
+				scene->entities.erase(it);
+				for(auto garbage_collector : scene->garbage_collectors) {
+					unsigned int bit = 1 << garbage_collector.first;
+					if(old_mask & bit == 0) continue;
+
+					garbage_collector.second->collect(id);
 				}
+				return;
+			}
 		}
 
 		template <concepts::Component T>
-		bool has_component() {
+		bool has_component() const {
 			return component_mask & 1 << components::get_component_id<T>();
 		}
 
@@ -182,12 +147,22 @@ namespace P1::entity {
 			if(component_mask & bit)
 				return nullptr;
 
+			std::shared_ptr<components::ComponentPool<T>> component_pool = scene->get_pool<T>();
+
+			if(!(scene->garbage_collector_mask & bit)) {
+				std::shared_ptr<components::GarbageCollector<T>> garbage_collector =
+					std::make_shared<components::GarbageCollector<T>>(component_pool);
+
+				scene->garbage_collectors[id] = std::static_pointer_cast<components::GarbageCollectorBase>(garbage_collector);
+				scene->garbage_collector_mask |= bit;
+			}
+
 			// Create and initialize component
 			std::shared_ptr<T> component = std::make_shared<T>();
 			component->id = id;
 			component->entity_id = this->id;
 			// Add to corresponding component pool
-			scene->get_pool<T>()->components.push_back(component);
+			component_pool->components.push_back(component);
 			// Add to component mask bitfield
 			component_mask |= bit;
 

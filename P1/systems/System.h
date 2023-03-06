@@ -11,56 +11,52 @@ namespace P1::systems {
 	class SystemBase {
 	private:
 		friend MainManager;
-		unsigned int update_mode;
+		unsigned int update_mode = SYSTEM_FRAME_BASED_MODE;
 
-		virtual void on_signature_change(entity::Entity* entity) {}
+		virtual void on_signature_change(entity::Entity& entity) { }
 
 		virtual void update() {}
 	public:
-		SystemBase(unsigned int mode = SYSTEM_FRAME_BASED_MODE) : update_mode(mode) { }
+		SystemBase() = default;
+		SystemBase(unsigned int mode) : update_mode(mode) { }
 	};
 
 	template <concepts::Component... T>
 	class System : public SystemBase {
 	private:
+		unsigned int mode;
+
 		friend MainManager;
 		entity::EntitySelector<T...> selector{};
 		inline static std::vector<entity::Entity*> entities{};
 
 	public:
-		System(unsigned int mode = SYSTEM_FRAME_BASED_MODE) : SystemBase(mode) { }
+		System() = default;
+		System(unsigned int mode) : SystemBase(mode), mode(mode) { }
 
 	private:
-		void on_signature_change(entity::Entity* entity) {
+		void on_signature_change(entity::Entity& entity) {
 			bool match = selector.match(entity);
 
-			for(auto it = entities.begin(); it != entities.end(); ++it) {
-				if(*it == nullptr) continue;
-
-				if(*it == entity) {
-					if(!match) entities.erase(it);
-					return;
-				}
-			}
-
-			if(match)
-				entities.push_back(entity);
-		}
-
-		void update() {
 			std::vector<std::vector<entity::Entity*>::iterator> garbage{};
 
-			for(auto it = entities.begin(); it != entities.end(); ++it) {
-				if(*it == nullptr) {
+			for(auto it = entities.begin(); it != entities.end(); ++it)
+				if(*it == nullptr || *it == &entity && !match)
 					garbage.push_back(it);
-					continue;
-				}
-
-				run(*it);
-			}
 
 			for(auto g : garbage)
 				entities.erase(g);
+
+			if(match)
+				entities.push_back(&entity);
+		}
+
+		void update() {
+			for(auto it = entities.begin(); it != entities.end(); ++it) {
+				if(*it == nullptr) continue;
+
+				run(*it);
+			}
 		}
 	public:
 		virtual void run(entity::Entity* entity) {}

@@ -2,35 +2,27 @@
 #include "../graphics/Window.h"
 #include "../inputs/InputManager.h"
 #include "../entity/Entity.h"
-#include "../systems/System.h"
+#include "System.h"
 #include "../components/Transform.h"
 #include "../components/Viewport.h"
 
 namespace P1::systems {
-	void on_signature_change(entity::Entity* entity) {
+	void on_signature_change(entity::Entity& entity) {
 		static entity::EntitySelector<components::Transform<>, components::Viewport> camera_selector{};
 
 		bool match = camera_selector.match(entity);
 
 		std::vector<std::vector<entity::Entity*>::iterator> garbage{};
 
-		for(auto it = MainManager::cameras.begin(); it != MainManager::cameras.end(); ++it) {
-			if(*it == nullptr) {
+		for(auto it = MainManager::cameras.begin(); it != MainManager::cameras.end(); ++it)
+			if(*it == nullptr || *it == &entity && !match)
 				garbage.push_back(it);
-				continue;
-			}
-
-			if(*it == entity) {
-				if(!match) MainManager::cameras.erase(it);
-				continue;
-			}
-		}
 
 		for(auto it : garbage)
 			MainManager::cameras.erase(it);
 
 		if(match)
-			MainManager::cameras.push_back(entity);
+			MainManager::cameras.push_back(&entity);
 	}
 
 	void MainManager::init() {
@@ -38,18 +30,18 @@ namespace P1::systems {
 		for(auto scene : scenes) {
 			for(auto system : systems) {
 				// Hook up systems with scene event managers
-				scene->event_manager.funnel([system](entity::Entity* entity){
-					system->on_signature_change(entity);
-					on_signature_change(entity);
+				scene->event_manager.funnel([system](entity::Entity* entity) {
+					system->on_signature_change(*entity);
+					on_signature_change(*entity);
 				});
 
 				// Initializing each system
 				for(auto entity : scene->entities)
-					system->on_signature_change(entity.get());
+					system->on_signature_change(*entity);
 			}
 
 			for(auto entity : scene->entities)
-				on_signature_change(entity.get());
+				on_signature_change(*entity);
 		}
 
 		// Start update loop

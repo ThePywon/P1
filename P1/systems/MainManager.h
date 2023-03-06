@@ -40,7 +40,9 @@ private:
 		static void add_system() {
 			static bool exists = false;
 
-			if(!exists) systems.push_back(std::make_shared<T>());
+			if(exists) return;
+
+			systems.push_back(std::make_shared<T>());
 
 			exists = true;
 		}

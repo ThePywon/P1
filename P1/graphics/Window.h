@@ -40,7 +40,7 @@ namespace P1::graphics {
 	public:
 		const char* name;
 
-		std::unique_ptr<events::EventManager<int>> event_manager;
+		std::unique_ptr<events::EventManager<unsigned int>> event_manager;
 		std::shared_ptr<inputs::InputListener> input_listener;
 
 		Window(use_create_method assertion, const char* name, int width, int height);
