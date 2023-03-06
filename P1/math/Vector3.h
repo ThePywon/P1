@@ -30,6 +30,16 @@ namespace P1::math {
 			Proxy<T>::set_ref(y, this->data[1][0]);
 			Proxy<T>::set_ref(z, this->data[2][0]);
 		}
+		Vector3(T x, T y): Matrix<T, 1, 4>() {
+			this->data[0][0] = x;
+			this->data[1][0] = y;
+			this->data[2][0] = 1;
+			this->data[3][0] = 1;
+
+			Proxy<T>::set_ref(this->x, this->data[0][0]);
+			Proxy<T>::set_ref(this->y, this->data[1][0]);
+			Proxy<T>::set_ref(this->z, this->data[2][0]);
+		}
 		Vector3(T x, T y, T z): Matrix<T, 1, 4>() {
 			this->data[0][0] = x;
 			this->data[1][0] = y;

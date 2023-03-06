@@ -118,9 +118,8 @@ void start() {
 	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
-	//camera_transform->position.x = 0.5;
-
-	camera->destroy();
+	camera_transform->position.x = 0.5;
+	camera_transform->scale = Vector3(2.0f, 2.0f);
 }
 
 void update() {
