@@ -14,7 +14,7 @@ namespace P1::graphics {
 		}
 		glfwMakeContextCurrent(NULL);
 
-		event_manager = std::make_unique<events::EventManager<int>>();
+		event_manager = std::make_unique<events::EventManager<unsigned int>>();
 		input_listener = std::make_shared<inputs::InputListener>(this);
 	}
 

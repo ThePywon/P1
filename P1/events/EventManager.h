@@ -8,9 +8,9 @@ namespace P1::events {
 	template <typename T, typename ...Args>
 	class EventManager {
 	private:
-		#define FUNC std::function<void(Args...)>
-		#define EVENTS std::vector<FUNC>
-		#define FUNNEL std::function<void(T, Args...)>
+		typedef std::function<void(Args...)> FUNC;
+		typedef std::vector<FUNC> EVENTS;
+		typedef std::function<void(T, Args...)> FUNNEL;
 
 		std::unordered_map<T, EVENTS> events{};
 		std::vector<FUNNEL> funnels{};

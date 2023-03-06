@@ -39,7 +39,6 @@ Scene scene{};
 Entity* rObj = Entity::create(&scene, "Raw Input");
 Entity* lObj = Entity::create(&scene, "Linear Input");
 Entity* sObj = Entity::create(&scene, "Smooth Input");
-
 LineRendererComponent* rLine = rObj->add_component<LineRendererComponent>();
 LineRendererComponent* lLine = lObj->add_component<LineRendererComponent>();
 LineRendererComponent* sLine = sObj->add_component<LineRendererComponent>();
@@ -80,7 +79,6 @@ int main(int argc, char *argv[]) {
 	sLine->vertices.push_back(0);
 	sLine->vertices.push_back(0);
 	sLine->vertices.push_back(0);
-
 	rLine->color = SolidColor<float>(1, 0, 0);
 	lLine->color = SolidColor<float>(0, 1, 0);
 	sLine->color = SolidColor<float>(0, 0, 1);
@@ -120,11 +118,9 @@ void start() {
 	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
-	camera_transform->position.x = 0.5;
+	//camera_transform->position.x = 0.5;
 
-	Entity* test = Entity::create(&scene, "test");
-	test->add_component<Transform<>>();
-	test->destroy();
+	camera->destroy();
 }
 
 void update() {

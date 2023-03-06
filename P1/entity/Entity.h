@@ -81,7 +81,7 @@ namespace P1::entity {
 	};
 
 	class Entity : public std::enable_shared_from_this<Entity> {
-	private:
+	public:
 		unsigned int id;
 		std::string name;
 
@@ -114,13 +114,18 @@ namespace P1::entity {
 
 		// Remove entity from scene
 		void destroy() {
+			unsigned int old_mask = component_mask;
+
+			component_mask = 0;
+			scene->event_manager.emit(this);
+
 			for(auto it = scene->entities.begin(); it != scene->entities.end(); ++it) {
 				if((*it)->id != id) continue;
 
 				scene->entities.erase(it);
 				for(auto garbage_collector : scene->garbage_collectors) {
 					unsigned int bit = 1 << garbage_collector.first;
-					if(component_mask & bit == 0) continue;
+					if(old_mask & bit == 0) continue;
 
 					garbage_collector.second->collect(id);
 				}
@@ -129,7 +134,7 @@ namespace P1::entity {
 		}
 
 		template <concepts::Component T>
-		bool has_component() {
+		bool has_component() const {
 			return component_mask & 1 << components::get_component_id<T>();
 		}
 
@@ -202,15 +207,6 @@ namespace P1::entity {
 
 		bool operator == (const Entity& other) {
 			return id == other.id;
-		}
-
-		~Entity() {
-			for(auto garbage_collector : scene->garbage_collectors) {
-				unsigned int bit = 1 << garbage_collector.first;
-				if(!(component_mask & bit)) continue;
-
-				garbage_collector.second->collect(id);
-			}
 		}
 
 		Entity (Entity& other) = delete;
