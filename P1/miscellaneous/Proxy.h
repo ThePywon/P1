@@ -28,25 +28,25 @@ public:
 	template <typename _T>
 	T operator + (const Proxy<_T>& p) { return *value + (*p.value); }
 	template <typename _T>
-	friend _T operator + (const Proxy<T>& p, const _T& v) { return v + *p.value; }
+	friend _T operator + (const _T& v, const Proxy<T>& p) { return v + *p.value; }
 	template <typename _T>
 	T operator - (const _T& v) { return *value - v; }
 	template <typename _T>
 	T operator - (const Proxy<_T>& p) { return *value - (*p.value); }
 	template <typename _T>
-	friend _T operator - (const Proxy<T>& p, const _T& v) { return v - *p.value; }
+	friend _T operator - (const _T& v, const Proxy<T>& p) { return v - *p.value; }
 	template <typename _T>
 	T operator * (const _T& v) { return *value * v; }
 	template <typename _T>
 	T operator * (const Proxy<_T>& p) { return *value * (*p.value); }
 	template <typename _T>
-	friend _T operator * (const Proxy<T>& p, const _T& v) { return v * *p.value; }
+	friend _T operator * (const _T& v, const Proxy<T>& p) { return v * *p.value; }
 	template <typename _T>
 	T operator / (const _T& v) { return *value / v; }
 	template <typename _T>
 	T operator / (const Proxy<_T>& p) { return *value / (*p.value); }
 	template <typename _T>
-	friend _T operator / (const Proxy<T>& p, const _T& v) { return v / *p.value; }
+	friend _T operator / (const _T& v, const Proxy<T>& p) { return v / *p.value; }
 	template <typename _T>
 	T operator += (const _T& v) { return *value += v; }
 	template <typename _T>

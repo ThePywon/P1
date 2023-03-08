@@ -20,6 +20,7 @@
 #include "P1/systems/System.h"
 #include "P1/entity/EntitySelector.h"
 #include "P1/systems/LineRenderer.h"
+#include "P1/events/Logger.h"
 
 using namespace P1;
 using namespace inputs;
@@ -35,17 +36,10 @@ Window* window;
 std::unique_ptr<Axis2D> Arrows;
 
 Scene scene{};
-/*
-Entity* rObj = Entity::create(&scene, "Raw Input");
-Entity* lObj = Entity::create(&scene, "Linear Input");
-Entity* sObj = Entity::create(&scene, "Smooth Input");
-LineRendererComponent* rLine = rObj->add_component<LineRendererComponent>();
-LineRendererComponent* lLine = lObj->add_component<LineRendererComponent>();
-LineRendererComponent* sLine = sObj->add_component<LineRendererComponent>();
-*/
 
 Entity* camera = Entity::create(&scene, "Camera");
 Entity* test_lines = Entity::create(&scene, "Test Lines");
+Entity* world_center = Entity::create(&scene, "World Center");
 
 Transform<>* camera_transform;
 Viewport* camera_viewport;
@@ -56,7 +50,6 @@ void glew_setup();
 void start();
 void update();
 int main(int argc, char *argv[]) {
-
 	// Init glfw
 	if(!glfwInit()) return 1;
 
@@ -69,20 +62,7 @@ int main(int argc, char *argv[]) {
 	window = Window::create("test", 600, 600);
 
 	Arrows = std::make_unique<Axis2D>(&*window, GLFW_KEY_LEFT, GLFW_KEY_UP, GLFW_KEY_RIGHT, GLFW_KEY_DOWN);
-/*
-	rLine->vertices.push_back(0);
-	rLine->vertices.push_back(0);
-	rLine->vertices.push_back(0);
-	lLine->vertices.push_back(0);
-	lLine->vertices.push_back(0);
-	lLine->vertices.push_back(0);
-	sLine->vertices.push_back(0);
-	sLine->vertices.push_back(0);
-	sLine->vertices.push_back(0);
-	rLine->color = SolidColor<float>(1, 0, 0);
-	lLine->color = SolidColor<float>(0, 1, 0);
-	sLine->color = SolidColor<float>(0, 0, 1);
-*/
+
 	// Create event listeners
 	window->event_manager->on(WINDOW_START_EVENT, glew_setup);
 	window->event_manager->on(WINDOW_START_EVENT, start);
@@ -93,23 +73,28 @@ int main(int argc, char *argv[]) {
 	// Start update loop
 	MainManager::init();
 
-	return 0;
+	return MainManager::state;
 }
 
 void glew_setup() {
+	Logger glew_logger{"Glew"};
+
 	int state = glewInit();
 	if(state == GLEW_OK) {
-		std::cout << "Glew initialized successfully." << std::endl;
-		std::cout << "Currently using: " << glGetString(GL_VERSION) << std::endl;
+		glew_logger.debug("initialized successfully");
+		glew_logger.debug("Currently using: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
 	}
 	else {
-		std::cout << "ERROR::GLEW::NOT_OK\n" << glewGetErrorString(state) << std::endl;
+		glew_logger.debug("initialized unsuccessfully.\n" + std::string(reinterpret_cast<const char*>(glewGetErrorString(state))));
 	}
 }
 
 // Start callback
 void start() {
-	std::cout << "Start event called!" << std::endl;
+	world_center->materials.push_back(std::make_shared<Material>());
+	world_center->add_component<Transform<>>();
+	LineRendererComponent* center_rend = world_center->add_component<LineRendererComponent>();
+	center_rend->color = SolidColor<float>(0, 0, 1);
 
 	test_lines->materials.push_back(std::make_shared<Material>());
 
@@ -118,9 +103,10 @@ void start() {
 	line_transform = test_lines->add_component<Transform<>>();
 	line_rend = test_lines->add_component<LineRendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
-	camera_transform->position.x = 0.5;
-	camera_transform->scale = Vector3(2.0f, 2.0f);
+	camera_transform->scale = Vector3(2.0f, 2.0f, 2.0f);
 }
+
+Logger test_logger{"FUCK YOU"};
 
 void update() {
 	glClearColor(0, 0, 0, 0);
@@ -129,9 +115,5 @@ void update() {
 	line_transform->position.x = *Arrows->smooth().x;
 	line_transform->position.y = *Arrows->smooth().y;
 
-	//test_lines->destroy();
-
-	/*rLine->vertices[1] = Arrows->raw();
-	lLine->vertices[1] = Arrows->linear();
-	sLine->vertices[1] = Arrows->smooth();*/
+	test_logger.error("Bro this shit gotta go.");
 }
