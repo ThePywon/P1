@@ -11,6 +11,7 @@
 #include <memory>
 #include <iostream>
 #include "../concepts/GameConcepts.h"
+#include "../events/Logger.h"
 
 namespace P1::graphics { class Window; }
 namespace P1::entity {
@@ -21,7 +22,15 @@ namespace P1::entity {
 namespace P1::systems {
 	class SystemBase;
 
+	#define STATE_OK 0
+	#define STATE_BAD 1
+
 	class MainManager {
+	public:
+		inline const static std::unique_ptr<events::Logger> logger =
+			std::make_unique<events::Logger>("MainManager");
+
+		inline static unsigned int state = STATE_OK;
 	private:
 		friend void on_signature_change(entity::Entity* entity);
 
@@ -48,5 +57,7 @@ private:
 		}
 
 		static void init();
+
+		inline static void terminate() { state = STATE_BAD; }
 	};
 }

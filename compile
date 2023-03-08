@@ -10,6 +10,7 @@ cd "$path/objects"
 # Setup vars
 pattern="*.cpp"
 ignore=""
+debug=false
 fallback=false
 passed=false
 output=false
@@ -85,6 +86,8 @@ do
 		then fallback=true
 	elif [ "$var" == "-v" ] || [ "$var" == "--verbose" ]
 		then output=true
+	elif [ "$var" == "-d" ] || [ "$var" == "--debug" ]
+		then debug=true
 	elif [[ "$var" == --fallback=* ]]
 		then fallback=$(echo $var | cut -d '=' -f 2)
 	# Add file to files var if valid
@@ -102,7 +105,11 @@ fi
 
 # Compile all files
 if [ $output == false ]
-then g++ -pthread -c $files -lglfw -lglut -lGLEW -lGLU -lGL -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lrt -ldl -fcoroutines -std=c++20
+then
+	if [ $debug == true ] 
+		then g++ -pthread -c -g $files -lglfw -lglut -lGLEW -lGLU -lGL -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lrt -ldl -fcoroutines -std=c++20
+	else g++ -pthread -c $files -lglfw -lglut -lGLEW -lGLU -lGL -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lrt -ldl -fcoroutines -std=c++20
+	fi
 else
 index=1
 while true
@@ -110,7 +117,10 @@ do
 	file=$(echo $files | cut -d ' ' -f $index)
 	echo "Compiling file '$file'"
 	# Compile file
-	g++ -pthread -c $file -lglfw -lglut -lGLEW -lGLU -lGL -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lrt -ldl -fcoroutines -std=c++20
+	if [ $debug == true ]
+		then g++ -pthread -c -g $file -lglfw -lglut -lGLEW -lGLU -lGL -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lrt -ldl -fcoroutines -std=c++20
+	else g++ -pthread -c $file -lglfw -lglut -lGLEW -lGLU -lGL -lXrandr -lXxf86vm -lXi -lXinerama -lX11 -lrt -ldl -fcoroutines -std=c++20
+	fi
 	# Update index
 	((index++))
 	# Break if out of files

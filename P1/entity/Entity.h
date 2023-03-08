@@ -103,7 +103,6 @@ namespace P1::entity {
 			this->scene = scene;
 			// Get id from generator method
 			id = get_entity_id();
-			std::cout << "Entity \"" << name << "\" #" << id << " created." << std::endl;
 		}
 
 		// Forced alternative constructor
@@ -113,25 +112,7 @@ namespace P1::entity {
 		inline std::string get_name() { return name; }
 
 		// Remove entity from scene
-		void destroy() {
-			unsigned int old_mask = component_mask;
-
-			component_mask = 0;
-			scene->event_manager.emit(this);
-
-			for(auto it = scene->entities.begin(); it != scene->entities.end(); ++it) {
-				if((*it)->id != id) continue;
-
-				scene->entities.erase(it);
-				for(auto garbage_collector : scene->garbage_collectors) {
-					unsigned int bit = 1 << garbage_collector.first;
-					if(old_mask & bit == 0) continue;
-
-					garbage_collector.second->collect(id);
-				}
-				return;
-			}
-		}
+		void destroy();
 
 		template <concepts::Component T>
 		bool has_component() const {

@@ -49,7 +49,7 @@ namespace P1::systems {
 	}
 
 	void MainManager::update() {
-		while(windows.size() > 0) {
+		while(windows.size() > 0 && state == STATE_OK) {
 			auto bad_window = windows.end();
 			for(auto w = windows.begin(); w != windows.end(); ++w) {
 				auto window = *w;
@@ -87,7 +87,7 @@ namespace P1::systems {
 			}
 			if(bad_window != windows.end()) {
 				windows.erase(bad_window);
-				std::cout << "Window \"" << (*bad_window)->name << "\" destroyed." << std::endl;
+				logger->debug("Window \"" + std::string{(*bad_window)->name} + "\" destroyed.");
 			}
 
 			for(auto system : systems) {

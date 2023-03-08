@@ -43,7 +43,6 @@ namespace P1::systems {
 				(-camera_transform->position).to_translate_matrix<COLUMN_MAJOR>();
 
 				glUniformMatrix4fv(mvp, 1, GL_FALSE, &MVP.data[0][0]);
-				//glUniformMatrix4fv(scale, 1, GL_FALSE, &final_s_mat.data[0][0]);
 				glDrawArrays(GL_LINES, 0, renderer->vertices.size() / 3);
 			}
 		}
