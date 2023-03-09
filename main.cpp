@@ -16,10 +16,10 @@
 #include "P1/components/Transform.h"
 #include "P1/components/Viewport.h"
 #include "P1/entity/Entity.h"
-#include "P1/components/LineRendererComponent.h"
+#include "P1/components/RendererComponent.h"
 #include "P1/systems/System.h"
 #include "P1/entity/EntitySelector.h"
-#include "P1/systems/LineRenderer.h"
+#include "P1/systems/Renderer.h"
 #include "P1/events/Logger.h"
 
 using namespace P1;
@@ -44,7 +44,7 @@ Entity* world_center = Entity::create(&scene, "World Center");
 Transform<>* camera_transform;
 Viewport* camera_viewport;
 Transform<>* line_transform;
-LineRendererComponent* line_rend;
+RendererComponent* line_rend;
 
 void glew_setup();
 void start();
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
 	window->event_manager->on(WINDOW_START_EVENT, start);
 	window->event_manager->on(WINDOW_UPDATE_EVENT, update);
 
-	MainManager::add_system<LineRenderer>();
+	MainManager::add_system<Renderer>();
 
 	// Start update loop
 	MainManager::init();
@@ -93,20 +93,36 @@ void glew_setup() {
 void start() {
 	world_center->materials.push_back(std::make_shared<Material>());
 	world_center->add_component<Transform<>>();
-	LineRendererComponent* center_rend = world_center->add_component<LineRendererComponent>();
+	RendererComponent* center_rend = world_center->add_component<RendererComponent>();
 	center_rend->color = SolidColor<float>(0, 0, 1);
+	center_rend->vertices = std::vector<float>{
+		0, -1, 0,
+		0, 1, 0,
+		-1, 0, 0,
+		1, 0, 0
+	};
+	center_rend->draw_mode = GL_LINES;
 
 	test_lines->materials.push_back(std::make_shared<Material>());
 
 	camera_transform = camera->add_component<Transform<>>();
 	camera_viewport = camera->add_component<Viewport>();
 	line_transform = test_lines->add_component<Transform<>>();
-	line_rend = test_lines->add_component<LineRendererComponent>();
+	line_rend = test_lines->add_component<RendererComponent>();
 	line_rend->color = SolidColor<float>(1, 1, 1);
+	line_rend->vertices = std::vector<float>{
+		-0.25, -0.25, 0,
+		-0.25, 0.25, 0,
+		-0.25, 0.25, 0,
+		0.25, 0.25, 0,
+		0.25, 0.25, 0,
+		0.25, -0.25, 0,
+		0.25, -0.25, 0,
+		-0.25, -0.25, 0
+	};
+	line_rend->draw_mode = GL_LINES;
 	camera_transform->scale = Vector3(2.0f, 2.0f, 2.0f);
 }
-
-Logger test_logger{"FUCK YOU"};
 
 void update() {
 	glClearColor(0, 0, 0, 0);
@@ -114,6 +130,4 @@ void update() {
 
 	line_transform->position.x = *Arrows->smooth().x;
 	line_transform->position.y = *Arrows->smooth().y;
-
-	test_logger.error("Bro this shit gotta go.");
 }

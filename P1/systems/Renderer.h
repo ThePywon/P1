@@ -3,21 +3,21 @@
 #include "MainManager.h"
 #include "System.h"
 #include "../components/Transform.h"
-#include "../components/LineRendererComponent.h"
+#include "../components/RendererComponent.h"
 #include "../math/Matrix.h"
 #include <vector>
 
 namespace P1::systems {
-	class LineRenderer : public System<components::Transform<>, components::LineRendererComponent> {
+	class Renderer : public System<components::Transform<>, components::RendererComponent> {
 	public:
-		LineRenderer() : System<components::Transform<>, components::LineRendererComponent>(SYSTEM_WINDOW_BASED_MODE) {}
+		Renderer() : System<components::Transform<>, components::RendererComponent>(SYSTEM_WINDOW_BASED_MODE) {}
 
 		void run(entity::Entity* entity) {
 			components::Transform<>* transform = entity->get_component<components::Transform<>>();
 			math::Matrix<float, 4> t_mat = transform->scale.to_scale_matrix() *
 				transform->position.to_translate_matrix<COLUMN_MAJOR>();
 
-			components::LineRendererComponent* renderer = entity->get_component<components::LineRendererComponent>();
+			components::RendererComponent* renderer = entity->get_component<components::RendererComponent>();
 
 			if(entity->materials.size() == 0) {
 				std::cout << "[LineRenderer] At entity \"" << entity->name <<
@@ -33,6 +33,7 @@ namespace P1::systems {
 			int scale = glGetUniformLocation(entity->materials[0]->program, "scale");
 			glUniform3fv(color, 1, renderer->color.data_ptr());
 			glLineWidth(renderer->line_width);
+			glPointSize(renderer->point_size);
 			glBindVertexArray(entity->materials[0]->VAO);
 
 			for(int i = 0; i < MainManager::cameras.size(); i++) {
@@ -43,7 +44,7 @@ namespace P1::systems {
 				(-camera_transform->position).to_translate_matrix<COLUMN_MAJOR>();
 
 				glUniformMatrix4fv(mvp, 1, GL_FALSE, &MVP.data[0][0]);
-				glDrawArrays(GL_LINES, 0, renderer->vertices.size() / 3);
+				glDrawArrays(renderer->draw_mode, 0, renderer->vertices.size() / 3);
 			}
 		}
 	};
