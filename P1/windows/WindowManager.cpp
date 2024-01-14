@@ -49,7 +49,7 @@ namespace P1::windows {
     std::shared_ptr<Window> window = std::make_shared<Window>(Window::friends_only{}, width, height, name);
 
     // Make sure it initialized properly
-    if(!window) return false;
+    if(!*window) return false;
 
     windows.push_back(window);
 
