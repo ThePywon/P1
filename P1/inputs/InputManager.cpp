@@ -1,4 +1,4 @@
-#include <algorithm>
+/*#include <algorithm>
 #include "InputManager.h"
 
 #define MAX_KEYS 1024
@@ -54,3 +54,4 @@ namespace P1 { namespace inputs {
 		}
 	}
 }}
+*/

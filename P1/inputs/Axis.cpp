@@ -1,4 +1,4 @@
-#include "Axis.h"
+/*#include "Axis.h"
 
 namespace P1 { namespace inputs {
 	void get_raw(Axis* axis);
@@ -83,3 +83,4 @@ namespace P1 { namespace inputs {
 			m_smooth = m_raw;
 	}
 }}
+*/

@@ -1,2 +1,6 @@
-./objects
-./build
+objects
+build
+.vscode
+compile
+link
+run

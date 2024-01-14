@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 #include <type_traits>
 
 namespace P1 { namespace graphics {
@@ -26,3 +26,4 @@ namespace P1 { namespace graphics {
 		}
 	};
 }}
+*/

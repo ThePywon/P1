@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 #ifndef GL_INCLUDED
 #define GL_INCLUDED
@@ -54,3 +54,4 @@ namespace P1::inputs {
 		inline P1::math::Vector2<double> smooth() { return P1::math::Vector2<double>(x->smooth(), y->smooth()).clamped(); }
 	};
 }
+*/

@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 #ifndef GL_INCLUDED
 #define GL_INCLUDED
@@ -55,3 +55,4 @@ namespace P1::inputs {
 		static void cursorPosCallback(GLFWwindow* window, double x, double y);
 	};
 }
+*/

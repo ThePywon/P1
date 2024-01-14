@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 namespace P1::graphics {
 	struct ShaderProperty {
@@ -133,3 +133,4 @@ namespace P1::graphics {
 		}
 	};
 }
+*/

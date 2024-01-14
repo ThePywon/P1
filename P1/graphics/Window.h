@@ -1,4 +1,4 @@
-#pragma once
+/*#pragma once
 
 #ifndef GL_INCLUDED
 #define GL_INCLUDED
@@ -53,8 +53,9 @@ namespace P1::graphics {
 			return state != INVALID_WINDOW;
 		}
 
-		inline P1::math::Vector2<int> getSize() const { return P1::math::Vector2<int>(width, height); }
+		inline P1::math::Vector2<int> get_size() const { return P1::math::Vector2<int>(width, height); }
 	private:
 		bool init();
 	};
 }
+*/

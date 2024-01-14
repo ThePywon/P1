@@ -19,15 +19,14 @@ namespace P1::events {
 	#define LOG_ONLY_WARNING 4
 	#define LOG_ONLY_CRITICAL 8
 	#define LOG_ONLY_ERROR 16
-	#define LOG_NO_DEBUG 30
-	#define LOG_NO_LOG 29
-	#define LOG_NO_WARNING 27
-	#define LOG_NO_CRITICAL 23
-	#define LOG_NO_ERROR 15
+	#define LOG_ALL_BUT_DEBUG 30
+	#define LOG_ALL_BUT_LOG 29
+	#define LOG_ALL_BUT_WARNING 27
+	#define LOG_ALL_BUT_CRITICAL 23
+	#define LOG_ALL_BUT_ERROR 15
 	#define LOG_ALL 31
 
 	class Logger {
-	private:
 		std::string name;
 
 	public:

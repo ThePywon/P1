@@ -1,6 +1,5 @@
-#include "Window.h"
+/*#include "Window.h"
 #include <functional>
-#include "../systems/MainManager.h"
 
 namespace P1::graphics {
 	Window::Window(use_create_method assertion, const char* name, int width, int height) {
@@ -38,3 +37,4 @@ namespace P1::graphics {
 		glfwMakeContextCurrent(prev_context);
 	}
 }
+*/

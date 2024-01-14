@@ -1,13 +1,11 @@
 #pragma once
 
-#include "../concepts/MathConcepts.h"
-
 template <typename T>
 class Proxy {
 private:
 	T* value;
 public:
-	Proxy() : value(NULL) { };
+	Proxy() : value(NULL) { }
 	Proxy(T& v) : value(&v) { }
 
 	static inline void set_ref(Proxy<T>& p, T& v) { p.value = &v; }

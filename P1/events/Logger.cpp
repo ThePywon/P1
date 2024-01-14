@@ -1,5 +1,4 @@
 #include "Logger.h"
-#include "../systems/MainManager.h"
 
 namespace P1::events {
 	Logger::Logger(std::string name) {
@@ -15,28 +14,26 @@ namespace P1::events {
 	}
 
 	void Logger::init_events() {
-		event_manager->on(DEBUG, [this](std::string msg) {
-			if(1 << DEBUG & this->logging_mask)
-				std::cout << this->get_name_lbl() << " " << this->get_debug_lbl() << " " << msg << std::endl;
-		});
-		event_manager->on(LOG, [this](std::string msg) {
-			if(1 << LOG & this->logging_mask)
-				std::cout << this->get_name_lbl() << " " << msg << std::endl;
-		});
-		event_manager->on(WARNING, [this](std::string msg) {
-			if(1 << WARNING & this->logging_mask)
-				std::cout << this->get_name_lbl() << " " << this->get_warn_lbl() << " " << msg << std::endl;
-		});
-		event_manager->on(CRITICAL, [this](std::string msg) {
-			if(1 << CRITICAL & this->logging_mask)
-				std::cout << this->get_name_lbl() << " " << this->get_crit_lbl() << " " << msg << std::endl;
-		});
-		event_manager->on(ERROR, [this](std::string msg) {
-			if(1 << ERROR & this->logging_mask)
-				std::cout << this->get_name_lbl() << " " << this->get_error_lbl() << " " << msg << std::endl;
-
-			systems::MainManager::terminate();
-		});
+		if(1 << DEBUG & this->logging_mask)
+      event_manager->on(DEBUG, [this](std::string msg) {
+        std::cout << this->get_name_lbl() << " " << this->get_debug_lbl() << " " << msg << std::endl;
+      });
+		if(1 << LOG & this->logging_mask)
+      event_manager->on(LOG, [this](std::string msg) {
+        std::cout << this->get_name_lbl() << " " << msg << std::endl;
+      });
+    if(1 << WARNING & this->logging_mask)
+      event_manager->on(WARNING, [this](std::string msg) {
+        std::cout << this->get_name_lbl() << " " << this->get_warn_lbl() << " " << msg << std::endl;
+      });
+    if(1 << CRITICAL & this->logging_mask)
+      event_manager->on(CRITICAL, [this](std::string msg) {
+        std::cout << this->get_name_lbl() << " " << this->get_crit_lbl() << " " << msg << std::endl;
+      });
+    if(1 << ERROR & this->logging_mask)
+      event_manager->on(ERROR, [this](std::string msg) {
+        std::cout << this->get_name_lbl() << " " << this->get_error_lbl() << " " << msg << std::endl;
+      });
 	}
 
 	std::string Logger::get_name_lbl() {
