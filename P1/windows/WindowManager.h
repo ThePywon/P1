@@ -5,13 +5,15 @@
 #include <memory>
 
 #include "../events/Logger.h"
+#include "Window.h"
 
 namespace P1::engine { class Engine; }
 
 namespace P1::windows {
   class WindowManager {
     P1::events::Logger logger{"WindowManager"};
-    std::vector<GLFWwindow*> windows{};
+    std::vector<std::shared_ptr<Window>> windows{};
+    bool initialized = false;
 
     friend engine::Engine;
 

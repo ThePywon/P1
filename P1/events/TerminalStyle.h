@@ -4,7 +4,7 @@
 #include <vector>
 #include <initializer_list>
 
-namespace P1::events {
+namespace P1::events::terminal_style {
 	#define RESET 0u
 	#define BOLD 1u
 	#define DARK 2u
@@ -14,7 +14,7 @@ namespace P1::events {
 	#define FLASHING 6u
 	#define RESET_BOLD 21u
 	#define RESET_DARK 22u
-	#define RESET_ITALIC 23y
+	#define RESET_ITALIC 23u
 	#define RESET_UNDERLINE 24u
 	#define RESET_INVERSE 27u
 	#define RESET_FLASHING 28u

@@ -37,20 +37,20 @@ namespace P1::events {
 	}
 
 	std::string Logger::get_name_lbl() {
-		return set_style({LIGHT_WHITE, BLACK_BG}, "[" + this->name + "]");
+		return terminal_style::set_style({LIGHT_WHITE, BLACK_BG}, "[" + this->name + "]");
 	}
 
 	std::string Logger::get_debug_lbl() {
-		return set_style({LIGHT_CYAN, BLACK_BG}, "<DEBUG>");
+		return terminal_style::set_style({LIGHT_CYAN, BLACK_BG}, "<DEBUG>");
 	}
 	std::string Logger::get_warn_lbl() {
-		return set_style({LIGHT_YELLOW, BLACK_BG}, "<WARNING>");
+		return terminal_style::set_style({LIGHT_YELLOW, BLACK_BG}, "<WARNING>");
 	}
 	std::string Logger::get_crit_lbl() {
-		return set_style({MAGENTA, BOLD, BLACK_BG}, "<CRITICAL>");
+		return terminal_style::set_style({MAGENTA, BOLD, BLACK_BG}, "<CRITICAL>");
 	}
 	std::string Logger::get_error_lbl() {
-		return set_style({RED, BOLD, BLACK_BG}, "<ERROR>");
+		return terminal_style::set_style({RED, BOLD, BLACK_BG}, "<ERROR>");
 	}
 
 	void Logger::debug(std::string msg) {

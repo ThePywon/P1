@@ -5,40 +5,38 @@
 #include "WindowManager.h"
 
 namespace P1::windows {
-  bool glew_initialized = false;
-
   void glew_setup();
   void WindowManager::run() {
     while(windows.size() > 0) {
-      std::vector<GLFWwindow*>::iterator bad_window = windows.end();
+      std::vector<std::shared_ptr<Window>>::iterator bad_window = windows.end();
 
-      std::vector<GLFWwindow*>::iterator window;
+      std::vector<std::shared_ptr<Window>>::iterator window;
       for(window = windows.begin(); window != windows.end(); window++) {
+        GLFWwindow* w_ptr = (*window)->glfw_window;
 
         // Flag window as invalid if it should close
-        if(glfwWindowShouldClose(*window)) {
+        if(glfwWindowShouldClose(w_ptr)) {
           bad_window = window;
           continue;
         }
 
         // Rendering shit
-        glfwMakeContextCurrent(*window);
+        glfwMakeContextCurrent(w_ptr);
 
         int width, height;
-        glfwGetFramebufferSize(*window, &width, &height);
+        glfwGetFramebufferSize(w_ptr, &width, &height);
         glViewport(0, 0, width, height);
 
         glClearColor(1, 0.5, 0.2, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glfwSwapBuffers(*window);
+        glfwSwapBuffers(w_ptr);
         glfwPollEvents();
       }
 
       // Let the window close and stop handling it
       if(bad_window != windows.end()) {
-        logger.debug("Window closed!");
-        glfwDestroyWindow(*bad_window);
+        logger.debug("Window \"" + (*bad_window)->name + "\" closed!");
         windows.erase(bad_window);
       }
     }
@@ -47,19 +45,24 @@ namespace P1::windows {
   }
 
   bool WindowManager::create_window(int width, int height, const char* name) {
-    GLFWwindow* window = glfwCreateWindow(width, height, name, NULL, NULL);
+    // Create the window
+    std::shared_ptr<Window> window = std::make_shared<Window>(Window::friends_only{}, width, height, name);
+
+    // Make sure it initialized properly
+    if(!window) return false;
+
     windows.push_back(window);
 
-    if(!glew_initialized) {
-      glfwMakeContextCurrent(window);
+    if(!initialized) {
       glew_setup();
-      glew_initialized = true;
+      initialized = true;
     }
 
-    return window;
+    return true;
   }
 
   // Initialises opengl functions
+  // Only needs to be run once
   // MUST HAVE A VALID WINDOW CONTEXT BEFORE RUNNING
   void glew_setup() {
     P1::events::Logger glew_logger{"GLEW"};
