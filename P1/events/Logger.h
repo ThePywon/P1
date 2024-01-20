@@ -55,5 +55,10 @@ namespace P1::events {
 		void warn(std::string msg);
 		void crit(std::string msg);
 		void error(std::string msg);
+    void debug_sync(std::string msg);
+		void log_sync(std::string msg);
+		void warn_sync(std::string msg);
+		void crit_sync(std::string msg);
+		void error_sync(std::string msg);
 	};
 }

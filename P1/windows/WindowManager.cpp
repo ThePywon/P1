@@ -1,17 +1,19 @@
+#ifndef GL_INCLUDED
+#define GL_INCLUDED
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#endif
 #include <iterator>
 
 #include "WindowManager.h"
+#include "../inputs/InputManager.h"
 
 namespace P1::windows {
-  void glew_setup();
   void WindowManager::run() {
     while(windows.size() > 0) {
-      std::vector<std::shared_ptr<Window>>::iterator bad_window = windows.end();
+      auto bad_window = windows.end();
 
-      std::vector<std::shared_ptr<Window>>::iterator window;
-      for(window = windows.begin(); window != windows.end(); window++) {
+      for(auto window = windows.begin(); window != windows.end(); window++) {
         GLFWwindow* w_ptr = (*window)->glfw_window;
 
         // Flag window as invalid if it should close
@@ -35,10 +37,8 @@ namespace P1::windows {
       }
 
       // Let the window close and stop handling it
-      if(bad_window != windows.end()) {
-        logger.debug("Window \"" + (*bad_window)->name + "\" closed!");
+      if(bad_window != windows.end())
         windows.erase(bad_window);
-      }
     }
 
     glfwTerminate();
@@ -54,9 +54,11 @@ namespace P1::windows {
     windows.push_back(window);
 
     if(!initialized) {
-      glew_setup();
+      WindowManager::glew_setup();
       initialized = true;
     }
+
+    inputs::InputManager::registerWindow(window->glfw_window);
 
     return true;
   }
@@ -64,17 +66,17 @@ namespace P1::windows {
   // Initialises opengl functions
   // Only needs to be run once
   // MUST HAVE A VALID WINDOW CONTEXT BEFORE RUNNING
-  void glew_setup() {
+  void WindowManager::glew_setup() {
     P1::events::Logger glew_logger{"GLEW"};
 
     int state = glewInit();
     if(state == GLEW_OK) {
-      glew_logger.debug("Initialisation successfull.");
-      glew_logger.debug("Currently using: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
+      glew_logger.debug_sync("Initialisation successfull.");
+      glew_logger.debug_sync("Currently using: " + std::string(reinterpret_cast<const char*>(glGetString(GL_VERSION))));
     }
     else {
-      glew_logger.crit("Initialisation FAILED.");
-      glew_logger.crit("Details: " + std::string(reinterpret_cast<const char*>(glewGetErrorString(state))));
+      glew_logger.crit_sync("Initialisation FAILED.");
+      glew_logger.crit_sync("Details: " + std::string(reinterpret_cast<const char*>(glewGetErrorString(state))));
     }
   }
 }

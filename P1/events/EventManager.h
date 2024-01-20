@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <functional>
+#include <thread>
 
 namespace P1::events {
 	template <typename T, typename ...Args>
@@ -41,12 +42,23 @@ namespace P1::events {
 			if(event != events.end())
 				// Run every callback for that event
 				for(FUNC callback : event->second)
-					callback(std::forward<Args>(args)...);
+          std::thread{callback, std::forward<Args>(args)...}.detach();
 
 			// Run every void callback either the event exists or not
 			for(FUNNEL callback : funnels)
-				callback(std::forward<T>(key), std::forward<Args>(args)...);
+        std::thread{callback, std::forward<T>(key), std::forward<Args>(args)...}.detach();
 		}
+
+    void emit_sync(T key, Args... args) {
+			auto event = events.find(key);
+
+			if(event != events.end())
+				for(FUNC callback : event->second)
+          callback(std::forward<Args>(args)...);
+
+			for(FUNNEL callback : funnels)
+        callback(std::forward<T>(key), std::forward<Args>(args)...);
+    }
 
 		// Listen for ANY event
 		void funnel(FUNNEL callback) {

@@ -68,4 +68,19 @@ namespace P1::events {
 	void Logger::error(std::string msg) {
 		event_manager->emit(ERROR, msg);
 	}
+  void Logger::debug_sync(std::string msg) {
+		event_manager->emit_sync(DEBUG, msg);
+	}
+	void Logger::log_sync(std::string msg) {
+		event_manager->emit_sync(LOG, msg);
+	}
+	void Logger::warn_sync(std::string msg) {
+		event_manager->emit_sync(WARNING, msg);
+	}
+	void Logger::crit_sync(std::string msg) {
+		event_manager->emit_sync(CRITICAL, msg);
+	}
+	void Logger::error_sync(std::string msg) {
+		event_manager->emit_sync(ERROR, msg);
+	}
 }
