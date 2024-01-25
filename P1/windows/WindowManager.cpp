@@ -7,6 +7,7 @@
 
 #include "WindowManager.h"
 #include "../inputs/InputManager.h"
+#include "../inputs/Axis2.h"
 
 namespace P1::windows {
   void WindowManager::run() {
@@ -31,6 +32,23 @@ namespace P1::windows {
 
         glClearColor(1, 0.5, 0.2, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        inputs::Axis x{GLFW_KEY_RIGHT, GLFW_KEY_LEFT};
+        inputs::Axis y{GLFW_KEY_UP, GLFW_KEY_DOWN};
+        inputs::Axis2 arrows{x, y};
+        math::vector2 raw = arrows.get_raw();
+
+        glPointSize(10);
+	      glLineWidth(2.5); 
+        glColor3f(0, 1, 0);
+        glBegin(GL_POINTS);
+        glVertex3f(0, 0, 0);
+        glVertex3f(raw.x, raw.y, 0);
+        glEnd();
+        glBegin(GL_LINES);
+        glVertex3f(0, 0, 0);
+        glVertex3f(raw.x, raw.y, 0);
+        glEnd();
 
         glfwSwapBuffers(w_ptr);
         glfwPollEvents();

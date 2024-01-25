@@ -13,11 +13,15 @@
 #include "P1/engine/Engine.h"
 #include "P1/events/EventManager.h"
 #include "P1/inputs/InputManager.h"
+#include "P1/inputs/Axis.h"
+#include "P1/inputs/Axis2.h"
 
 using namespace P1;
 using namespace math;
 
-void glfw_error_callback(int, const char*);
+void glfw_error_callback(int error, const char* description) {
+  std::cerr << "Error: " << description << '\n' << std::endl;
+}
 
 int main(int argc, char *argv[]) {
 	// Init glfw
@@ -27,7 +31,7 @@ int main(int argc, char *argv[]) {
   // Version hints
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
-	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
 
   engine::Engine p1{};
 
@@ -35,18 +39,17 @@ int main(int argc, char *argv[]) {
   p1.window_manager.create_window(300, 300, "Engine 2");
   p1.window_manager.create_window(300, 300, "Engine 3");
 
-  std::thread{[&p1](){
+  inputs::Axis x{GLFW_KEY_RIGHT, GLFW_KEY_LEFT};
+  inputs::Axis y{GLFW_KEY_UP, GLFW_KEY_DOWN};
+  inputs::Axis2 arrows{x, y};
+
+  std::thread{[&p1,&arrows](){
     while(p1.get_running_status()) {
-      if(inputs::InputManager::isKeyPressed(GLFW_KEY_E))
-        std::cout << "Key was pressed!" << std::endl;
+      std::cout << arrows.get_raw() << std::endl;
     }
   }}.detach();
 
   p1.run();
 
 	return 0;
-}
-
-void glfw_error_callback(int error, const char* description) {
-  std::cerr << "Error: " << description << '\n' << std::endl;
 }

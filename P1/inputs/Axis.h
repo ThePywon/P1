@@ -1,3 +1,23 @@
+#pragma once
+
+#include <vector>
+#include <initializer_list>
+
+namespace P1::inputs {
+  class Axis {
+  private:
+    std::vector<int> positives;
+    std::vector<int> negatives;
+    
+  public:
+    Axis(int positive, int negative);
+    Axis(std::vector<int> positives, std::vector<int> negatives);
+    Axis(std::initializer_list<int> positives, std::initializer_list<int> negatives);
+
+    int get_raw() const;
+  };
+}
+
 /*#pragma once
 
 #ifndef GL_INCLUDED

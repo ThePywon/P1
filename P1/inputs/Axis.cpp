@@ -1,3 +1,41 @@
+#include "Axis.h"
+#include "InputManager.h"
+
+namespace P1::inputs {
+  Axis::Axis(int positive, int negative) {
+    this->positives = {positive};
+    this->negatives = {negative};
+  }
+  Axis::Axis(std::vector<int> positives, std::vector<int> negatives) {
+    this->positives = positives;
+    this->negatives = negatives;
+  }
+  Axis::Axis(std::initializer_list<int> positives, std::initializer_list<int> negatives) {
+    this->positives = {};
+    this->negatives = {};
+
+    for(int positive: positives)
+      this->positives.push_back(positive);
+    for(int negative: negatives)
+      this->negatives.push_back(negative);
+  }
+
+  int Axis::get_raw() const {
+    int result = 0;
+
+    for(int key: positives)
+      if(InputManager::isKeyPressed(key))
+        result++;
+    for(int key: negatives)
+      if(InputManager::isKeyPressed(key))
+        result--;
+    
+    if(result > 1) return 1;
+    else if(result < -1) return -1;
+    else return result;
+  }
+}
+
 /*#include "Axis.h"
 
 namespace P1 { namespace inputs {

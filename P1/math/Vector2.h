@@ -36,8 +36,19 @@ namespace P1::math {
     }
     static double dot(const Vector2& lhs, const Vector2& rhs);
 
-    double magnitude();
-    Vector2 normalized();
+    double magnitude() {
+      return sqrt(x * x + y * y);
+    }
+    Vector2 normalized() {
+      double m = magnitude();
+      double x = 0;
+      double y = 0;
+
+      if(this->x != 0) x = this->x / m;
+      if(this->y != 0) y = this->y / m;
+
+      return Vector2{ x, y };
+    }
 
     friend std::ostream& operator << (std::ostream& os, const Vector2& v) {
       return os << "(" << v.x << ", " << v.y << ")";
@@ -134,6 +145,10 @@ namespace P1::math {
       this->x /= rhs;
       this->y /= rhs;
       return *this;
+    }
+    template<typename N, typename = std::enable_if_t<std::is_arithmetic<N>::value>>
+    operator Vector2<N>() const {
+      return Vector2<N>{ static_cast<N>(this->x), static_cast<N>(this->y) };
     }
   };
   
