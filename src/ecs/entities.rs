@@ -54,7 +54,7 @@ impl<const B: usize> EntityManager<B> {
   }
 
   pub fn add_component(&mut self, entity: u32, component: u32) -> Result<(), P1Error> {
-    // This variable is keeping an immutable borrow alive so we need to kill it manually
+    // This variable is keeping an immutable borrow of self alive so we need to kill it manually
     let mut bitmask = self.entities.get_mut(&entity).ok_or(EntityError::NotFound)?;
     bitmask.add(component)?;
     let archetype = *bitmask;

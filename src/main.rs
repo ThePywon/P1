@@ -89,11 +89,11 @@ fn main() {
   //let arc = engine.get_component::<A>(my_entity).unwrap();
   //dbg!(arc.downcast_ref::<A>());
 
-  let system = |mut query: Query<&mut A>| {
-    /*for component in query {
-      dbg!(component);
-      //component.position.1 = 4;
-    }*/
+  let system = |mut query: Query<A>| {
+    for component in query.iter_mut() {
+      dbg!(&component);
+      component.position.1 += 1;
+    }
   };
 
   engine.register_system(system).unwrap();

@@ -4,16 +4,22 @@ pub enum ComponentError {
   AlreadyExistsForEntity,
   NotFoundForEntity,
   // SHOULD NEVER GET THAT ERROR
-  // This error occurs when I somehow don't catch an unregistered component
-  // And end up with a component id that doesn't exist
+  // This error occurs when accessing out of bounds indexes in a component bitmask
+  // meaning I either somehow don't catch an unregistered component
+  // or pass in unchecked component ids
   InvalidId,
-  NotEnoughAllocatedSpace
+  NotEnoughAllocatedSpace,
+  // SHOULD ALSO NEVER HAPPEN!
+  // This error occurs when a component was stored under the wrong id
+  // and there was an attempt at downcasting it resulting in failure
+  IllAllocated
 }
 
 #[derive(Debug)]
 pub enum EntityError {
   NotFound,
   // SHOULD NEVER GET THAT ERROR
+  // Happens when a component wasn't found but the entity thinks it has it
   MismatchedComponentBitmask
 }
 

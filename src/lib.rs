@@ -1,9 +1,5 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::any::{Any, TypeId};
-use std::ops::DerefMut;
-use std::sync::Arc;
-use dashmap::DashMap;
+use std::any::TypeId;
+use std::thread;
 //use std::time::{SystemTime, UNIX_EPOCH};
 
 pub mod ecs;
@@ -11,7 +7,8 @@ pub mod rendering;
 pub mod ui;
 pub mod events;
 
-use ecs::{ComponentError, ComponentIndexer, EntityError, EntityManager, P1Error, Query, QueryData, Mut, Ref};
+use ecs::{Component, ComponentBitmask, ComponentManager, ComponentError, ComponentIndexer, EntityManager, P1Error, Query};
+use parking_lot::RwLock;
 
 #[macro_export]
 macro_rules! init_engine {
@@ -26,13 +23,10 @@ macro_rules! init_engine {
   [@inner $i:ident] => { 1usize }
 }
 
-type ComponentCell = Arc<RefCell<dyn Any>>;
-type ComponentRow = Arc<DashMap<u32, ComponentCell>>;
-
 pub struct P1<const B: usize> {
   entity_manager: EntityManager<B>,
-  components: HashMap<u32, ComponentRow>,
-  component_indexer: ComponentIndexer
+  component_indexer: ComponentIndexer,
+  component_manager: RwLock<ComponentManager<B>>
 }
 
 impl<const B: usize> P1<B> {
@@ -58,7 +52,7 @@ impl<const B: usize> P1<B> {
         //dbg!(*current);
       }
     });*/
-    P1 { entity_manager: EntityManager::new(), components: HashMap::new(), component_indexer }
+    P1 { entity_manager: EntityManager::new(), component_manager: RwLock::new(ComponentManager::new()), component_indexer }
   }
   pub const fn size(&self) -> usize { B }
 
@@ -66,57 +60,55 @@ impl<const B: usize> P1<B> {
     self.entity_manager.create_entity()
   }
 
-  pub fn has_component<C: 'static>(&self, entity: u32) -> Result<bool, P1Error> {
+  #[allow(dead_code)]
+  fn has_component(&self, entity: u32, c_id: u32) -> Result<bool, P1Error> {
+    self.entity_manager.has_component(entity, c_id)
+  }
+
+  pub fn get_component<C: Component +  'static>(&self, entity: u32) -> Result<ecs::ComponentCell, P1Error> {
     let component = self.component_indexer.get_component_id(&TypeId::of::<C>())?;
-    self.entity_manager.has_component(entity, component)
+    if !self.has_component(entity, component)? { return Err(ComponentError::NotFoundForEntity.into()) }
+
+    self.component_manager.read().get_component(entity, component).map_err(|e| e.into())
   }
 
-  pub fn get_component<C: 'static>(&self, entity: u32) -> Result<ComponentCell, P1Error> {
-    if !self.has_component::<C>(entity)? { return Err(ComponentError::NotFoundForEntity.into()) }
+  pub fn add_component<C: Component +  'static>(&mut self, entity: u32, component: C) -> Result<(), P1Error> {
+    let c_id = self.component_indexer.get_component_id(&TypeId::of::<C>())?;
 
-    let id = self.component_indexer.get_component_id(&TypeId::of::<C>())?;
-    let b = self.components.get(&id).unwrap().get(&entity).unwrap();
-    Ok(b.clone())
-  }
-
-  pub fn add_component<C: 'static>(&mut self, entity: u32, component: C) -> Result<(), P1Error> {
-    let id = self.component_indexer.get_component_id(&TypeId::of::<C>())?;
-
-    if self.has_component::<C>(entity)? {
+    if self.has_component(entity, c_id)? {
       return Err(ComponentError::AlreadyExistsForEntity.into())
     }
+    self.entity_manager.add_component(entity, c_id)?;
 
-    self.entity_manager.add_component(entity, id)?;
-
-    if let Some(pool) = self.components.get_mut(&id) {
-      pool.insert(entity, Arc::new(RefCell::new(component)));
-    } else {
-      let pool: ComponentRow = Arc::new(DashMap::new());
-      pool.insert(entity, Arc::new(RefCell::new(component)));
-      self.components.insert(id, pool);
-    }
-
-    Ok(())
+    self.component_manager.write().add_component(entity, c_id, component).map_err(|e| e.into())
   }
 
-  pub fn register_system<'b, D: QueryData<Mut, Item<'b, dyn Any> = std::cell::RefMut<'b, dyn Any>>>(&mut self, callback: for<'a> fn(Query<'a, Mut, D>)) -> Result<(), P1Error> {
-    println!("{}", D::bitmask::<B>(&self.component_indexer)?);
-    let entities = self.entity_manager.get_archetype(D::bitmask(&self.component_indexer)?);
+  // Change archetypes to literally be a per system cache or if not, make sure they don't require a mutable access
+  // Think of updating them with component changes though!
+  // After second though, archetype initialization can be done outside system threads + readonly access can be requested every iteration instead of all time
+  // Should make system struct to handle changes and iterations
+  pub fn register_system<C: Component + 'static>(&mut self, callback: for<'a, 'b> fn(Query<'a, 'b, C>)) -> Result<(), P1Error> {
+    let c_id = self.component_indexer.get_component_id(&TypeId::of::<C>()).unwrap();
+    let mut bitmask = ComponentBitmask::new_empty();
+    bitmask.add(c_id).unwrap();
+    let entities = self.entity_manager.get_archetype(bitmask);
 
     let mut components = Vec::new();
 
-    for id in entities.read().iter() {
-      dbg!(id);
-      components.push(self.get_component::<D::Item<'_, D>>(*id).map_err(|e| { match e {
-        P1Error::Component(ComponentError::NotFoundForEntity) => P1Error::Entity(EntityError::MismatchedComponentBitmask),
-        _ => e
-      }})?);
+    let component_manager = self.component_manager.read();
+    
+    for entity in entities.read().iter() {
+      components.push(component_manager.get_component(*entity, c_id).map_err(<ComponentError as Into<P1Error>>::into).unwrap());
     }
 
-    let mut something: Vec<_> = components.iter().map(|c| {c.borrow_mut()}).collect();
-    //let data = something.iter_mut().map(|c| D::try_as_mut(c.downcast_mut::<D::Item<'_, D>>().unwrap()).unwrap()).collect();
+    thread::spawn(move || {
+      let mut mut_borrow: Vec<_> = components.iter().map(|c| {c.write().unwrap()}).collect();
+      let mut data: Vec<_> = mut_borrow.iter_mut().map(|c| c.downcast_mut::<C>().ok_or(P1Error::Component(ComponentError::IllAllocated)).unwrap()).collect();
 
-    (callback)(Query::new(something));
+      loop {
+        (callback)(Query::new(&mut data));
+      }
+    });
     
 
     Ok(())
