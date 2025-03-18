@@ -248,8 +248,8 @@ dependencies = [
  "gl_loader",
  "glfw",
  "macros",
- "once_cell",
  "parking_lot",
+ "rustc-hash",
  "serde",
  "serde_json",
 ]
@@ -321,6 +321,12 @@ checksum = "9b6dfecf2c74bce2466cabf93f6664d6998a69eb21e39f4207930065b27b771f"
 dependencies = [
  "bitflags 2.6.0",
 ]
+
+[[package]]
+name = "rustc-hash"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "357703d41365b4b27c590e3ed91eabb1b663f07c4c084095e60cbed4362dff0d"
 
 [[package]]
 name = "ryu"

@@ -20,6 +20,7 @@ impl Program {
       gl::GetProgramiv(id, gl::LINK_STATUS, &mut success);
     }
 
+    // Need proper error handling
     if success == 0 {
       let mut len: gl::types::GLint = 0;
       unsafe {

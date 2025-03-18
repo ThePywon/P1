@@ -10,9 +10,7 @@ use glfw::{ffi::{glfwWindowHint, CONTEXT_VERSION_MAJOR, CONTEXT_VERSION_MINOR, O
 use serde::{Serialize, Deserialize};
 use p1::{ecs::Query, rendering::{Program, Shader, ShaderKind}};
 use p1::ecs::Component;
-use p1::{init_engine, P1};
-use std::thread;
-use std::sync::{Arc, Mutex};
+use p1::P1;
 //use p1::events::EventManager;
 
 #[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
@@ -21,21 +19,21 @@ struct A {
   scale: (i32, i32)
 }
 
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct B();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct C();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct D();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct E();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct F();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct G();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct H();
-#[derive(Component)]
+#[derive(Component, Debug)]
 struct I();
 
 
@@ -46,27 +44,6 @@ fn key_callback(window: &mut glfw::Window, key: Key, _: Scancode, action: Action
 }
 
 fn main() {
-  let test = Arc::new(Mutex::new(Box::new(A { position: (1, 2), scale: (3, 4) })));
-
-  let clone = test.clone();
-  let t1 = thread::spawn(move || {
-    let mut a = clone.lock().unwrap();
-    a.position.0 = 4;
-  });
-
-  let clone = test.clone();
-  let t2 = thread::spawn(move || {
-    dbg!(clone.lock().unwrap().position);
-  });
-
-  t1.join().unwrap();
-  t2.join().unwrap();
-
-  let a = A { position: (1, 2), scale: (3, 4) };
-  let serialized = serde_json::to_string(&a).unwrap();
-
-  println!("{}", serialized);
-
   unsafe {
     glfwWindowHint(CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(CONTEXT_VERSION_MINOR, 6);
@@ -75,7 +52,7 @@ fn main() {
 
   let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
 
-  let mut engine = init_engine![A, B, C, D, E, F, G, H, I];
+  let mut engine = P1::new();
   let my_entity = engine.create_entity();
   let entity_b = engine.create_entity();
   let entity_c = engine.create_entity();
@@ -85,18 +62,18 @@ fn main() {
   engine.add_component(my_entity, A { position: (1, 2), scale: (3, 4) }).unwrap();
   engine.add_component(my_entity, C {}).unwrap();
   engine.add_component(my_entity, I {}).unwrap();
-  engine.test(my_entity);
   //let arc = engine.get_component::<A>(my_entity).unwrap();
   //dbg!(arc.downcast_ref::<A>());
 
-  let system = |mut query: Query<A>| {
-    for component in query.iter_mut() {
-      dbg!(&component);
-      component.position.1 += 1;
+  let system = |mut query: Query<(&mut A, (&C, &I))>| {
+    for (a, (c, i)) in query.iter_mut() {
+      dbg!(&a);
+      dbg!(&c);
+      dbg!(&i);
     }
   };
 
-  engine.register_system(system).unwrap();
+  engine.register_system(system);
 
   /*{
     let component = engine.get_component::<A>(my_entity).unwrap();

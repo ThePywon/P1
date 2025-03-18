@@ -2,9 +2,12 @@ mod component;
 mod entities;
 mod query;
 mod error;
+mod archetype;
+
 pub use error::{P1Error, EntityError, ComponentError};
-pub use component::{Component, ComponentBitmask};
-pub(crate) use component::{ComponentIndexer, ComponentManager, ComponentCell};
+pub use component::Component;
+pub use query::{Query, QueryData};
+
+pub(crate) use component::{ComponentManager, ComponentContainer};
 pub(crate) use entities::EntityManager;
-pub use query::Query;
-//pub(crate) use query::{QueryData};
+pub(crate) use archetype::{Archetype, ArchetypeManager};
