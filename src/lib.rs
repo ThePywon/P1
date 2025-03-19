@@ -1,5 +1,6 @@
 use std::thread;
 use std::sync::Arc;
+use std::collections::HashSet;
 //use std::time::{SystemTime, UNIX_EPOCH};
 
 pub mod ecs;
@@ -78,6 +79,13 @@ impl P1 {
   // Should make system struct to handle changes and iterations
   pub fn register_system<D: QueryData + 'static>(&mut self, callback: for<'a, 'b> fn(Query<'a, 'b, D>)) {
     let c_ids = D::component_ids();
+
+    let mut unique = HashSet::new();
+    let is_unique_ids = c_ids.clone().into_iter().all(move |x| unique.insert(x));
+
+    // Need to actually return an error or something
+    if !is_unique_ids { return }
+
     let archetype_id = Archetype::id_from_c_ids(&c_ids);
     let entities = self.entity_manager.get_archetype(&c_ids);
     self.archetype_manager.write().insert(c_ids, entities);

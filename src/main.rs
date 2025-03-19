@@ -19,19 +19,19 @@ struct A {
   scale: (i32, i32)
 }
 
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct B();
 #[derive(Component, Debug)]
 struct C();
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct D();
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct E();
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct F();
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct G();
-#[derive(Component, Debug)]
+#[derive(Component)]
 struct H();
 #[derive(Component, Debug)]
 struct I();

@@ -2,17 +2,7 @@
 pub enum ComponentError {
   MismatchedComponentType,
   MissingContainer,
-  NotFoundForEntity,
-  // SHOULD NEVER GET THAT ERROR
-  // This error occurs when accessing out of bounds indexes in a component bitmask
-  // meaning I either somehow don't catch an unregistered component
-  // or pass in unchecked component ids
-  InvalidId,
-  NotEnoughAllocatedSpace,
-  // SHOULD ALSO NEVER HAPPEN!
-  // This error occurs when a component was stored under the wrong id
-  // and there was an attempt at downcasting it resulting in failure
-  IllAllocated
+  NotFoundForEntity
 }
 
 #[derive(Debug)]

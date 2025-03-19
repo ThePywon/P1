@@ -6,7 +6,7 @@ use dashmap::{DashMap, mapref::one::{Ref, RefMut}};
 
 use super::{ComponentError, P1Error};
 
-pub trait Component: Send + Sync + Any + Debug {
+pub trait Component: Send + Sync + Any {
   // Need some input-controlled human-readable type names for component serialization
 }
 
