@@ -1,4 +1,4 @@
-use super::{Component, ComponentContainer, ComponentManager};
+use super::{Component, ComponentContainer, ComponentManager, DataError, InternalDataError};
 use std::any::TypeId;
 use std::fmt::Debug;
 use std::marker::Sync;
@@ -64,7 +64,7 @@ pub trait QueryData {
   
   fn component_ids() -> Vec<TypeId>;
   #[allow(private_interfaces)]
-  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item>;
+  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError>;
 }
 
 impl<C: Component> QueryData for &C {
@@ -74,9 +74,9 @@ impl<C: Component> QueryData for &C {
     vec![TypeId::of::<C>()]
   }
   #[allow(private_interfaces)]
-  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item> {
-    let container = component_manager.get_container::<C>().unwrap();
-    ComponentRef(container.map(|c| c.get::<C>(&entity).unwrap()))
+  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError> {
+    let container = component_manager.get_container::<C>().ok_or(InternalDataError::ContainerNotFound)?;
+    Ok(ComponentRef(container.map(|c| c.get::<C>(&entity).unwrap())))
   }
 }
 
@@ -87,9 +87,9 @@ impl<C: Component> QueryData for &mut C {
     vec![TypeId::of::<C>()]
   }
   #[allow(private_interfaces)]
-  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item> {
-    let container = component_manager.get_container_mut::<C>().unwrap();
-    ComponentRefMut(container.map(|c| c.get_mut::<C>(&entity).unwrap()))
+  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError> {
+    let container = component_manager.get_container_mut::<C>().ok_or(InternalDataError::ContainerNotFound)?;
+    Ok(ComponentRefMut(container.map(|c| c.get_mut::<C>(&entity).unwrap())))
   }
 }
 
@@ -100,7 +100,7 @@ impl QueryData for () {
     Vec::new()
   }
   #[allow(private_interfaces)]
-  fn fetch<'item>(_: &'item RwLockReadGuard<'_, ComponentManager>, _: &u32) -> Self::Item<'item> {}
+  fn fetch<'item>(_: &'item RwLockReadGuard<'_, ComponentManager>, _: &u32) -> Result<Self::Item<'item>, DataError> { Ok(()) }
 }
 
 macro_rules! impl_querydata {
@@ -113,8 +113,8 @@ macro_rules! impl_querydata {
           .iter().flatten().map(|x| *x).collect()
       }
       #[allow(private_interfaces)]
-      fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item> {
-        ($first::fetch(component_manager, entity), $($inner::fetch(component_manager, entity)),*)
+      fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError> {
+        Ok(($first::fetch(component_manager, entity)?, $($inner::fetch(component_manager, entity)?),*))
       }
     }
 
@@ -128,7 +128,7 @@ macro_rules! impl_querydata {
         $inner::component_ids()
       }
       #[allow(private_interfaces)]
-      fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item> {
+      fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError> {
         $inner::fetch(component_manager, entity)
       }
     }

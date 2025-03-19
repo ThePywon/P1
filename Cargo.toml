@@ -10,7 +10,7 @@ edition = "2021"
 macros = { path = "macros" }
 gl = "0.14.0"
 gl_loader = "0.1.2"
-glfw = "0.55.0"
+glfw = "0.59.0"
 serde = { version = "1.0.200", features = ["derive"] }
 serde_json = "1.0.116"
 parking_lot = "0.12.3"

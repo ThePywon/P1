@@ -1,9 +1,13 @@
+mod ecs;
+mod rendering;
+mod p1;
+
 use std::ffi::CString;
 use macros::Component;
 use glfw::{ffi::{glfwWindowHint, CONTEXT_VERSION_MAJOR, CONTEXT_VERSION_MINOR, OPENGL_CORE_PROFILE, OPENGL_PROFILE}, Action, Context, Key, Modifiers, Scancode};
 use serde::{Serialize, Deserialize};
-use p1::{ecs::Query, rendering::{Program, Shader, ShaderKind}};
-use p1::ecs::Component;
+use ecs::{Component, Query};
+use rendering::{Program, Shader, ShaderKind};
 use p1::P1;
 //use p1::events::EventManager;
 
@@ -55,7 +59,7 @@ fn main() {
   dbg!(entity_c);
   engine.add_component(my_entity, A { position: (1, 2), scale: (3, 4) }).unwrap();
   engine.add_component(my_entity, C {}).unwrap();
-  engine.add_component(5, I {}).unwrap();
+  engine.add_component(my_entity, I {}).unwrap();
   //let arc = engine.get_component::<A>(my_entity).unwrap();
   //dbg!(arc.downcast_ref::<A>());
 
@@ -67,7 +71,7 @@ fn main() {
     }
   };
 
-  engine.register_system(system);
+  engine.register_system(system).unwrap();
 
   /*{
     let component = engine.get_component::<A>(my_entity).unwrap();

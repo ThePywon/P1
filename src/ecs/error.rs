@@ -1,39 +1,40 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ComponentError {
-  #[error("A component was pushed to an incompatible container.\nThis is an internal error and should never happen.")]
+pub enum InternalDataError {
+  #[error("A component was pushed to an incompatible container.")]
   MismatchedComponentType,
-  #[error("No container was found to push the provided component type to.")]
-  MissingContainer,
-  #[error("No component of the provided type was found for the provided entity")]
-  NotFoundForEntity
+  #[error("Container for provided component type was not found.")]
+  ContainerNotFound
 }
 
 #[derive(Error, Debug)]
-pub enum EntityError {
+pub enum DataError {
   #[error("No entities with the provided id was found.")]
-  NotFound
+  EntityNotFound,
+  // Need input-defined typename info soon
+  #[error("Cannot attach component to entity because a component of that type is already attached")]
+  ComponentExistsForEntity,
+  #[error(transparent)]
+  Internal(#[from] InternalDataError)
+}
+
+#[derive(Error, Debug)]
+pub enum SystemError {
+  #[error("Not all query items in system were unique.")]
+  QueryDeadlock
 }
 
 #[derive(Error, Debug)]
 pub enum P1Error {
   #[error(transparent)]
-  Component(ComponentError),
+  Data(#[from] DataError),
   #[error(transparent)]
-  Entity(EntityError),
-  // Need typename info soon
-  #[error("Cannot attach component to entity because a component of that type is already attached")]
-  ComponentExistsForEntity
+  System(#[from] SystemError)
 }
 
-impl From<ComponentError> for P1Error {
-  fn from(value: ComponentError) -> Self {
-    P1Error::Component(value)
+/*impl From<InternalDataError> for P1Error {
+  fn from(value: InternalDataError) -> Self {
+    P1Error::Data(DataError::Internal(value))
   }
-}
-impl From<EntityError> for P1Error {
-  fn from(value: EntityError) -> Self {
-    P1Error::Entity(value)
-  }
-}
+}*/

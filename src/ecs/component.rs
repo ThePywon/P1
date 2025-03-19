@@ -3,7 +3,7 @@ use std::collections::{HashMap, hash_map::{Values, ValuesMut}};
 use dashmap::Entry;
 use dashmap::{DashMap, mapref::one::{Ref, RefMut}};
 
-use super::{ComponentError, P1Error};
+use super::{DataError, InternalDataError};
 
 pub trait Component: Send + Sync + Any {
   // Need some input-controlled human-readable type names for component serialization
@@ -41,11 +41,11 @@ impl ComponentContainer {
     Self { component_type: TypeId::of::<C>(), ptrs: HashMap::new() }
   }
 
-  pub fn insert<C: Component>(&mut self, entity: u32, component: C) -> Result<(), P1Error> {
+  pub fn insert<C: Component>(&mut self, entity: u32, component: C) -> Result<(), DataError> {
     if TypeId::of::<C>() != self.component_type {
-      return Err(ComponentError::MismatchedComponentType.into())
+      return Err(DataError::Internal(InternalDataError::MismatchedComponentType))
     } else if self.ptrs.contains_key(&entity) {
-      return Err(P1Error::ComponentExistsForEntity)
+      return Err(DataError::ComponentExistsForEntity)
     }
 
     self.ptrs.insert(entity, ComponentPtr::new(component));

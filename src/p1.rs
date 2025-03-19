@@ -1,14 +1,8 @@
 use std::thread;
 use std::sync::Arc;
 use std::collections::HashSet;
-//use std::time::{SystemTime, UNIX_EPOCH};
 
-pub mod ecs;
-pub mod rendering;
-pub mod ui;
-pub mod events;
-
-use ecs::{Archetype, ArchetypeManager, Component, ComponentManager, EntityError, EntityManager, P1Error, Query, QueryData};
+use crate::ecs::{Archetype, ArchetypeManager, Component, ComponentManager, DataError, EntityManager, Query, QueryData, SystemError};
 use parking_lot::RwLock;
 
 /*#[macro_export]
@@ -59,13 +53,13 @@ impl P1 {
   }
 
   #[allow(dead_code)]
-  fn has_component<C: Component>(&self, entity: u32) -> Result<bool, EntityError> {
+  fn has_component<C: Component>(&self, entity: u32) -> Result<bool, DataError> {
     self.entity_manager.has_component::<C>(entity)
   }
 
-  pub fn add_component<C: Component +  'static>(&mut self, entity: u32, component: C) -> Result<(), P1Error> {
+  pub fn add_component<C: Component +  'static>(&mut self, entity: u32, component: C) -> Result<(), DataError> {
     if self.has_component::<C>(entity)? {
-      return Err(P1Error::ComponentExistsForEntity)
+      return Err(DataError::ComponentExistsForEntity)
     }
     self.entity_manager.add_component::<C>(entity)?;
 
@@ -77,14 +71,14 @@ impl P1 {
   // Think of updating them with component changes though!
   // After second though, archetype initialization can be done outside system threads + readonly access can be requested every iteration instead of all time
   // Should make system struct to handle changes and iterations
-  pub fn register_system<D: QueryData + 'static>(&mut self, callback: for<'a, 'b> fn(Query<'a, 'b, D>)) {
+  pub fn register_system<D: QueryData + 'static>(&mut self, callback: for<'a, 'b> fn(Query<'a, 'b, D>)) -> Result<(), SystemError> {
     let c_ids = D::component_ids();
 
     let mut unique = HashSet::new();
-    let is_unique_ids = c_ids.clone().into_iter().all(move |x| unique.insert(x));
 
-    // Need to actually return an error or something
-    if !is_unique_ids { return }
+    if !c_ids.clone().into_iter().all(move |x| unique.insert(x)) {
+      return Err(SystemError::QueryDeadlock)
+    }
 
     let archetype_id = Archetype::id_from_c_ids(&c_ids);
     let entities = self.entity_manager.get_archetype(&c_ids);
@@ -99,10 +93,12 @@ impl P1 {
       loop {
         let lock = component_manager.read();
         let mut components: Vec<_> = archetype_manager.read().get(archetype_id).unwrap().entities().iter().map(|entity| {
-          D::fetch(&lock, entity)
+          D::fetch(&lock, entity).unwrap()
         }).collect();
         (callback)(Query::<D>::new(&mut components));
       }
     });
+
+    Ok(())
   }
 }
