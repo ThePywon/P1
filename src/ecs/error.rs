@@ -1,26 +1,29 @@
-#[derive(Debug)]
+use thiserror::Error;
+
+#[derive(Error, Debug)]
 pub enum ComponentError {
+  #[error("A component was pushed to an incompatible container.\nThis is an internal error and should never happen.")]
   MismatchedComponentType,
+  #[error("No container was found to push the provided component type to.")]
   MissingContainer,
+  #[error("No component of the provided type was found for the provided entity")]
   NotFoundForEntity
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum EntityError {
+  #[error("No entities with the provided id was found.")]
   NotFound
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum P1Error {
+  #[error(transparent)]
   Component(ComponentError),
+  #[error(transparent)]
   Entity(EntityError),
-  // SHOULD NEVER GET THAT ERROR
-  // Happens when a component wasn't found for an entity in the component manager
-  // but the entity manager thinks it exists for that entity
-  MismatchedComponents,
-  // Happens when a component type is already registered with a specific entity
-  // and an attempt was made to add another of the same type
-  // In this engine, we only want one component per type of component per entity
+  // Need typename info soon
+  #[error("Cannot attach component to entity because a component of that type is already attached")]
   ComponentExistsForEntity
 }
 

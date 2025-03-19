@@ -112,7 +112,6 @@ macro_rules! impl_querydata {
         vec![$first::component_ids(), $($inner::component_ids()),*]
           .iter().flatten().map(|x| *x).collect()
       }
-
       #[allow(private_interfaces)]
       fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item> {
         ($first::fetch(component_manager, entity), $($inner::fetch(component_manager, entity)),*)
@@ -128,7 +127,6 @@ macro_rules! impl_querydata {
       fn component_ids() -> Vec<TypeId> {
         $inner::component_ids()
       }
-
       #[allow(private_interfaces)]
       fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Self::Item<'item> {
         $inner::fetch(component_manager, entity)

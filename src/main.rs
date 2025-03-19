@@ -1,9 +1,3 @@
-extern crate glfw;
-extern crate serde;
-extern crate serde_json;
-extern crate gl;
-extern crate gl_loader;
-
 use std::ffi::CString;
 use macros::Component;
 use glfw::{ffi::{glfwWindowHint, CONTEXT_VERSION_MAJOR, CONTEXT_VERSION_MINOR, OPENGL_CORE_PROFILE, OPENGL_PROFILE}, Action, Context, Key, Modifiers, Scancode};
@@ -61,7 +55,7 @@ fn main() {
   dbg!(entity_c);
   engine.add_component(my_entity, A { position: (1, 2), scale: (3, 4) }).unwrap();
   engine.add_component(my_entity, C {}).unwrap();
-  engine.add_component(my_entity, I {}).unwrap();
+  engine.add_component(5, I {}).unwrap();
   //let arc = engine.get_component::<A>(my_entity).unwrap();
   //dbg!(arc.downcast_ref::<A>());
 
