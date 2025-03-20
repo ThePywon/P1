@@ -1,4 +1,5 @@
-use std::thread;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread::{self, JoinHandle};
 use std::sync::Arc;
 use std::collections::HashSet;
 
@@ -21,7 +22,10 @@ macro_rules! init_engine {
 pub struct P1 {
   entity_manager: EntityManager,
   archetype_manager: Arc<RwLock<ArchetypeManager>>,
-  component_manager: Arc<RwLock<ComponentManager>>
+  component_manager: Arc<RwLock<ComponentManager>>,
+  // Systems need to exist soon and hold the handle
+  thread_handles: Vec<JoinHandle<()>>,
+  is_alive: Arc<AtomicBool>
 }
 
 impl P1 {
@@ -44,7 +48,9 @@ impl P1 {
     P1 {
       entity_manager: EntityManager::new(),
       archetype_manager: Arc::new(RwLock::new(ArchetypeManager::new())),
-      component_manager: Arc::new(RwLock::new(ComponentManager::new()))
+      component_manager: Arc::new(RwLock::new(ComponentManager::new())),
+      thread_handles: Vec::new(),
+      is_alive: Arc::new(AtomicBool::new(true))
     }
   }
 
@@ -52,8 +58,7 @@ impl P1 {
     self.entity_manager.create_entity()
   }
 
-  #[allow(dead_code)]
-  fn has_component<C: Component>(&self, entity: u32) -> Result<bool, DataError> {
+  pub fn has_component<C: Component>(&self, entity: u32) -> Result<bool, DataError> {
     self.entity_manager.has_component::<C>(entity)
   }
 
@@ -87,10 +92,11 @@ impl P1 {
     // This is so I don't end up doing a 'static self borrow
     let archetype_manager = self.archetype_manager.clone();
     let component_manager = self.component_manager.clone();
+    let state = self.is_alive.clone();
 
-    thread::spawn(move || {
+    let t = thread::spawn(move || {
       // Need event ticks soon
-      loop {
+      while state.load(Ordering::Relaxed) {
         let lock = component_manager.read();
         let mut components: Vec<_> = archetype_manager.read().get(archetype_id).unwrap().entities().iter().map(|entity| {
           D::fetch(&lock, entity).unwrap()
@@ -99,6 +105,17 @@ impl P1 {
       }
     });
 
+    self.thread_handles.push(t);
+
     Ok(())
+  }
+}
+
+impl Drop for P1 {
+  fn drop(&mut self) {
+    self.is_alive.store(false, Ordering::Relaxed);
+    for handle in self.thread_handles.drain(..) {
+      handle.join().unwrap();
+    }
   }
 }

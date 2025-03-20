@@ -2,16 +2,17 @@ mod ecs;
 mod rendering;
 mod p1;
 
-use std::ffi::CString;
-use macros::Component;
-use glfw::{ffi::{glfwWindowHint, CONTEXT_VERSION_MAJOR, CONTEXT_VERSION_MINOR, OPENGL_CORE_PROFILE, OPENGL_PROFILE}, Action, Context, Key, Modifiers, Scancode};
-use serde::{Serialize, Deserialize};
-use ecs::{Component, Query};
-use rendering::{Program, Shader, ShaderKind};
-use p1::P1;
-//use p1::events::EventManager;
+extern crate macros;
 
-#[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
+use std::ffi::CString;
+//use macros::Component;
+use glfw::{ffi::{glfwWindowHint, CONTEXT_VERSION_MAJOR, CONTEXT_VERSION_MINOR, OPENGL_CORE_PROFILE, OPENGL_PROFILE}, Action, Context, Key, Modifiers, Scancode};
+//use serde::{Serialize, Deserialize};
+//use ecs::{Component, Query};
+use rendering::{Program, Shader, ShaderKind};
+//use p1::P1;
+
+/*#[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
 struct A {
   position: (i32, i32),
   scale: (i32, i32)
@@ -32,7 +33,7 @@ struct G();
 #[derive(Component)]
 struct H();
 #[derive(Component, Debug)]
-struct I();
+struct I();*/
 
 
 fn key_callback(window: &mut glfw::Window, key: Key, _: Scancode, action: Action, _: Modifiers) {
@@ -50,7 +51,7 @@ fn main() {
 
   let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
 
-  let mut engine = P1::new();
+  /*let mut engine = P1::new();
   let my_entity = engine.create_entity();
   let entity_b = engine.create_entity();
   let entity_c = engine.create_entity();
@@ -71,36 +72,7 @@ fn main() {
     }
   };
 
-  engine.register_system(system).unwrap();
-
-  /*{
-    let component = engine.get_component::<A>(my_entity).unwrap();
-    dbg!(&component);
-    component.position.0 = 4;
-    dbg!(&component);
-  }
-
-  {
-    let component = engine.get_component::<A>(my_entity).unwrap();
-    dbg!(&component);
-  }*/
-
-  /*let mut event_manager: EventManager<String> = EventManager::new();
-  event_manager.on(String::from("test1"), |_| {
-    println!("Call #1");
-  });
-  event_manager.on(String::from("test2"), |_| {
-    println!("Call #2");
-  });
-  event_manager.on(String::from("test3"), |_| {
-    println!("Call #3");
-  });
-  event_manager.emit(String::from("test1"), ());
-  event_manager.emit(String::from("test3"), ());
-  event_manager.emit(String::from("test1"), ());
-  event_manager.emit(String::from("test2"), ());
-  event_manager.emit(String::from("test2"), ());
-  event_manager.emit(String::from("test3"), ());*/
+  engine.register_system(system).unwrap();*/
 
   let (mut window, _) = glfw.create_window(500, 500, "P1 Engine", glfw::WindowMode::Windowed)
     .expect("Failed to create window");
@@ -184,4 +156,74 @@ fn main() {
   
   // Unload the OpenGL library.
   gl_loader::end_gl();
+}
+
+#[cfg(test)]
+mod tests {
+  use super::ecs::{Component, Query};
+  use super::macros::Component;
+  use super::p1::P1;
+  
+  #[test]
+  fn entity_creation() {
+    let mut engine = P1::new();
+    let entity_a = engine.create_entity();
+    let entity_b = engine.create_entity();
+    let entity_c = engine.create_entity();
+    assert_eq!(entity_a, 0);
+    assert_eq!(entity_b, 1);
+    assert_eq!(entity_c, 2);
+  }
+
+  #[derive(Component)]
+  struct TestComponentA();
+  #[derive(Component)]
+  struct TestComponentB();
+  #[derive(Component)]
+  struct TestComponentC();
+
+  #[test]
+  fn assigning_components() {
+    let mut engine = P1::new();
+    let entity = engine.create_entity();
+    engine.add_component(entity, TestComponentA {}).unwrap();
+    engine.add_component(entity, TestComponentB {}).unwrap();
+    engine.add_component(entity, TestComponentC {}).unwrap();
+    assert!(engine.has_component::<TestComponentA>(entity).unwrap());
+    assert!(engine.has_component::<TestComponentB>(entity).unwrap());
+    assert!(engine.has_component::<TestComponentC>(entity).unwrap());
+  }
+
+  #[test]
+  #[should_panic(expected = "Cannot attach component to entity because a component of that type is already attached.")]
+  fn assigning_preexisting_component() {
+    let mut engine = P1::new();
+    let entity = engine.create_entity();
+    engine.add_component(entity, TestComponentA {}).unwrap();
+    if let Err(e) = engine.add_component(entity, TestComponentA {}) {
+      panic!("{}", e);
+    }
+  }
+
+  #[test]
+  #[should_panic(expected = "No entities with the provided id was found.")]
+  fn non_existant_entity() {
+    let mut engine = P1::new();
+    // No entities were created, any id is invalid
+    if let Err(e) = engine.add_component(0, TestComponentA {}) {
+      panic!("{}", e);
+    }
+  }
+
+  #[test]
+  #[should_panic(expected = "Not all query items in system were unique.")]
+  fn query_deadlock() {
+    let mut engine = P1::new();
+
+    let system = |_: Query<(&TestComponentA, &TestComponentA)>| {};
+
+    if let Err(e) = engine.register_system(system) {
+      panic!("{}", e);
+    }
+  }
 }

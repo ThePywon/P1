@@ -13,7 +13,7 @@ pub enum DataError {
   #[error("No entities with the provided id was found.")]
   EntityNotFound,
   // Need input-defined typename info soon
-  #[error("Cannot attach component to entity because a component of that type is already attached")]
+  #[error("Cannot attach component to entity because a component of that type is already attached.")]
   ComponentExistsForEntity,
   #[error(transparent)]
   Internal(#[from] InternalDataError)
