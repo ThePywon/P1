@@ -3,21 +3,9 @@ use std::thread::{self, JoinHandle};
 use std::sync::Arc;
 use std::collections::HashSet;
 
-use crate::ecs::{Archetype, ArchetypeManager, Component, ComponentManager, DataError, EntityManager, Query, QueryData, SystemError};
+use crate::ecs::{Archetype, ArchetypeManager, Component, ComponentManager, EntityManager, Query, QueryData};
+use crate::error::{DataError, SystemError};
 use parking_lot::RwLock;
-
-/*#[macro_export]
-macro_rules! init_engine {
-  [$b:literal, $($i:ident),+] => {
-    P1::<$b>::new(vec![$(std::any::TypeId::of::<$i>()),+])
-  };
-  [$($i:ident),+] => {
-    P1::<{(0usize $(+ init_engine![@inner $i])+) / 8usize +
-      if (0usize $(+ init_engine![@inner $i])+) % 8usize > 0usize { 1usize } else { 0usize }}>
-      ::new(vec![$(std::any::TypeId::of::<$i>()),+])
-  };
-  [@inner $i:ident] => { 1usize }
-}*/
 
 pub struct P1 {
   entity_manager: EntityManager,
@@ -69,7 +57,7 @@ impl P1 {
     self.entity_manager.add_component::<C>(entity)?;
 
     self.component_manager.write().create_container::<C>()
-      .insert(entity, component)
+      .insert(entity, component).map_err(|e| e.into())
   }
 
   // Change archetypes to literally be a per system cache or if not, make sure they don't require a mutable access

@@ -1,5 +1,8 @@
+mod error;
+mod utility;
 mod ecs;
 mod rendering;
+mod event;
 mod p1;
 
 extern crate macros;

@@ -1,7 +1,8 @@
 use std::{any::TypeId, collections::HashSet};
 use dashmap::DashMap;
 
-use super::{Component, DataError};
+use super::Component;
+use crate::error::DataError;
 
 pub(crate) struct EntityManager {
   // Need this to get the actual components the entity has instead of the matching archetypes
@@ -34,19 +35,21 @@ impl EntityManager {
     let mut components = self.entities.get_mut(&entity).ok_or(DataError::EntityNotFound)?;
     let c_id = TypeId::of::<C>();
     if components.contains(&c_id) {
-      Err(DataError::ComponentExistsForEntity)
+      return Err(DataError::ComponentExistsForEntity)
     } else {
-      Ok(components.push(c_id))
+      components.push(c_id);
     }
+
+    Ok(())
   }
 
-  pub fn get_archetype(&self, c_ids: &Vec<TypeId>) -> Vec<u32> {
+  pub fn get_archetype(&self, c_ids: &[TypeId]) -> Vec<u32> {
     let mut result = Vec::new();
 
     for entity in self.entities.iter() {
       let c_set: HashSet<_> = entity.value().iter().copied().collect();
       if c_ids.iter().all(|id| c_set.contains(id)) {
-        result.push(entity.key().clone());
+        result.push(*entity.key());
       }
     }
 

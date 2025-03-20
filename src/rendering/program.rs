@@ -1,5 +1,5 @@
 use super::Shader;
-use super::utility::create_whitespace_cstring_with_len;
+use crate::utility::create_whitespace_cstring_with_len;
 
 pub struct Program {
   id: gl::types::GLuint

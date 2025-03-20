@@ -1,11 +1,15 @@
-use super::{Component, ComponentContainer, ComponentManager, DataError, InternalDataError};
 use std::any::TypeId;
 use std::fmt::Debug;
 use std::marker::Sync;
 use std::ops::{Deref, DerefMut};
 use std::slice::{Iter, IterMut};
+
 use dashmap::mapref::one::{MappedRef, MappedRefMut};
 use parking_lot::RwLockReadGuard;
+
+use super::{Component, ComponentManager};
+use crate::utility::ErasedMapContainer;
+use crate::error::{DataError, InternalDataError};
 
 pub struct Query<'iterable, 'item: 'iterable, D: QueryData> {
   data: &'iterable mut Vec<D::Item<'item>>
@@ -24,37 +28,37 @@ impl<'iterable, 'item: 'iterable, D: QueryData> Query<'iterable, 'item, D> {
   }
 }
 
-pub struct ComponentRef<'a, C: Component>(MappedRef<'a, TypeId, ComponentContainer, C>);
+pub struct ComponentRef<'a, C: Component>(MappedRef<'a, TypeId, ErasedMapContainer<u32>, C>);
 
-unsafe impl<'a, C: Component> Send for ComponentRef<'a, C> {}
-unsafe impl<'a, C: Component> Sync for ComponentRef<'a, C> {}
+unsafe impl<C: Component> Send for ComponentRef<'_, C> {}
+unsafe impl<C: Component> Sync for ComponentRef<'_, C> {}
 
 impl<'a, C: Component> Deref for ComponentRef<'a, C> {
-  type Target = MappedRef<'a, TypeId, ComponentContainer, C>;
+  type Target = MappedRef<'a, TypeId, ErasedMapContainer<u32>, C>;
 
   fn deref(&self) -> &Self::Target { &self.0 }
 }
-impl<'a, C: Component> DerefMut for ComponentRef<'a, C> {
+impl<C: Component> DerefMut for ComponentRef<'_, C> {
   fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
-impl<'a, C: Component + Debug> Debug for ComponentRef<'a, C> {
+impl<C: Component + Debug> Debug for ComponentRef<'_, C> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.0.value().fmt(f) }
 }
 
-pub struct ComponentRefMut<'a, C: Component>(MappedRefMut<'a, TypeId, ComponentContainer, C>);
+pub struct ComponentRefMut<'a, C: Component>(MappedRefMut<'a, TypeId, ErasedMapContainer<u32>, C>);
 
-unsafe impl<'a, C: Component> Send for ComponentRefMut<'a, C> {}
-unsafe impl<'a, C: Component> Sync for ComponentRefMut<'a, C> {}
+unsafe impl<C: Component> Send for ComponentRefMut<'_, C> {}
+unsafe impl<C: Component> Sync for ComponentRefMut<'_, C> {}
 
 impl<'a, C: Component> Deref for ComponentRefMut<'a, C> {
-  type Target = MappedRefMut<'a, TypeId, ComponentContainer, C>;
+  type Target = MappedRefMut<'a, TypeId, ErasedMapContainer<u32>, C>;
 
   fn deref(&self) -> &Self::Target { &self.0 }
 }
-impl<'a, C: Component> DerefMut for ComponentRefMut<'a, C> {
+impl< C: Component> DerefMut for ComponentRefMut<'_, C> {
   fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
 }
-impl<'a, C: Component + Debug> Debug for ComponentRefMut<'a, C> {
+impl<C: Component + Debug> Debug for ComponentRefMut<'_, C> {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.0.value().fmt(f) }
 }
 

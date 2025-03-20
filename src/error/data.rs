@@ -1,4 +1,5 @@
 use thiserror::Error;
+use super::utility::UtilityContainerError;
 
 #[derive(Error, Debug)]
 pub enum InternalDataError {
@@ -19,22 +20,11 @@ pub enum DataError {
   Internal(#[from] InternalDataError)
 }
 
-#[derive(Error, Debug)]
-pub enum SystemError {
-  #[error("Not all query items in system were unique.")]
-  QueryDeadlock
-}
-
-#[derive(Error, Debug)]
-pub enum P1Error {
-  #[error(transparent)]
-  Data(#[from] DataError),
-  #[error(transparent)]
-  System(#[from] SystemError)
-}
-
-/*impl From<InternalDataError> for P1Error {
-  fn from(value: InternalDataError) -> Self {
-    P1Error::Data(DataError::Internal(value))
+impl From<UtilityContainerError> for DataError {
+  fn from(value: UtilityContainerError) -> Self {
+    match value {
+      UtilityContainerError::MismatchedTypeId(_, _) => DataError::Internal(InternalDataError::MismatchedComponentType),
+      UtilityContainerError::EntryOccupied => DataError::ComponentExistsForEntity
+    }
   }
-}*/
+}
