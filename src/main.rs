@@ -8,14 +8,15 @@ mod p1;
 extern crate macros;
 
 use std::ffi::CString;
-//use macros::Component;
+use event::{Event, IntervalListener, builtin::Update};
+use macros::Component;
 use glfw::{ffi::{glfwWindowHint, CONTEXT_VERSION_MAJOR, CONTEXT_VERSION_MINOR, OPENGL_CORE_PROFILE, OPENGL_PROFILE}, Action, Context, Key, Modifiers, Scancode};
-//use serde::{Serialize, Deserialize};
-//use ecs::{Component, Query};
+use serde::{Serialize, Deserialize};
+use ecs::{Component, Query};
 use rendering::{Program, Shader, ShaderKind};
-//use p1::P1;
+use p1::P1;
 
-/*#[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
+#[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
 struct A {
   position: (i32, i32),
   scale: (i32, i32)
@@ -36,7 +37,7 @@ struct G();
 #[derive(Component)]
 struct H();
 #[derive(Component, Debug)]
-struct I();*/
+struct I();
 
 
 fn key_callback(window: &mut glfw::Window, key: Key, _: Scancode, action: Action, _: Modifiers) {
@@ -54,7 +55,7 @@ fn main() {
 
   let mut glfw = glfw::init(glfw::fail_on_errors).unwrap();
 
-  /*let mut engine = P1::new();
+  let mut engine = P1::new();
   let my_entity = engine.create_entity();
   let entity_b = engine.create_entity();
   let entity_c = engine.create_entity();
@@ -67,15 +68,16 @@ fn main() {
   //let arc = engine.get_component::<A>(my_entity).unwrap();
   //dbg!(arc.downcast_ref::<A>());
 
-  let system = |mut query: Query<(&mut A, (&C, &I))>| {
+  let system = |mut query: Query<(&mut A, (&C, &I))>, event: Event<Update>| {
     for (a, (c, i)) in query.iter_mut() {
       dbg!(&a);
       dbg!(&c);
       dbg!(&i);
+      dbg!(event.get_data());
     }
   };
 
-  engine.register_system(system).unwrap();*/
+  engine.register_system(system).unwrap();
 
   let (mut window, _) = glfw.create_window(500, 500, "P1 Engine", glfw::WindowMode::Windowed)
     .expect("Failed to create window");

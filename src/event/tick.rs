@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign};
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
 use chrono::{DateTime, TimeDelta, Utc};
 
@@ -12,6 +12,10 @@ impl Tick {
 
   pub fn touch(&mut self) {
     self.0 = Utc::now()
+  }
+
+  pub fn delta(&self, other: &Tick) -> TimeDelta {
+    (self.0 - other.0).abs()
   }
 }
 
@@ -31,5 +35,17 @@ impl Add<u32> for Tick {
 impl AddAssign<u32> for Tick {
   fn add_assign(&mut self, rhs: u32) {
     self.0 = self.0.checked_add_signed(TimeDelta::milliseconds(rhs.into())).unwrap()
+  }
+}
+impl Sub<u32> for Tick {
+  type Output = Self;
+
+  fn sub(self, rhs: u32) -> Self::Output {
+    self.0.checked_sub_signed(TimeDelta::milliseconds(rhs.into())).unwrap().into()
+  }
+}
+impl SubAssign<u32> for Tick {
+  fn sub_assign(&mut self, rhs: u32) {
+    self.0 = self.0.checked_sub_signed(TimeDelta::milliseconds(rhs.into())).unwrap()
   }
 }

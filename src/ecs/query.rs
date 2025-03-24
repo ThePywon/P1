@@ -11,20 +11,18 @@ use super::{Component, ComponentManager};
 use crate::utility::ErasedMapContainer;
 use crate::error::{DataError, InternalDataError};
 
-pub struct Query<'iterable, 'item: 'iterable, D: QueryData> {
-  data: &'iterable mut Vec<D::Item<'item>>
-}
+pub struct Query<'iterable, 'item: 'iterable, D: QueryData>(&'iterable mut Vec<D::Item<'item>>);
 
 impl<'iterable, 'item: 'iterable, D: QueryData> Query<'iterable, 'item, D> {
   pub fn new(data: &'iterable mut Vec<D::Item<'item>>) -> Self {
-    Self { data }
+    Self( data )
   }
 
   pub fn iter(&self) -> Iter<'_, D::Item<'item>> {
-    self.data.iter()
+    self.0.iter()
   }
   pub fn iter_mut(&mut self) -> IterMut<'_, D::Item<'item>> {
-    self.data.iter_mut()
+    self.0.iter_mut()
   }
 }
 

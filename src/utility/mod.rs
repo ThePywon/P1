@@ -49,10 +49,13 @@ impl<K: Eq + Hash> ErasedMapContainer<K> {
     Self { type_id: TypeId::of::<T>(), ptrs: HashMap::new() }
   }
 
+  pub fn is<T: Send + Sync + Any>(&self) -> bool {
+    TypeId::of::<T>() == self.type_id
+  }
+
   pub fn insert<T: Send + Sync + Any>(&mut self, key: K, data: T) -> Result<(), UtilityContainerError> {
-    let other = TypeId::of::<T>();
-    if other != self.type_id {
-      return Err(UtilityContainerError::MismatchedTypeId(self.type_id, other))
+    if !self.is::<T>() {
+      return Err(UtilityContainerError::MismatchedTypeId(self.type_id, TypeId::of::<T>()))
     } else if self.ptrs.contains_key(&key) {
       return Err(UtilityContainerError::EntryOccupied)
     }

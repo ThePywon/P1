@@ -5,7 +5,7 @@ use super::utility::UtilityContainerError;
 pub enum InternalDataError {
   #[error("A component was pushed to an incompatible container.")]
   MismatchedComponentType,
-  #[error("Container for provided component type was not found.")]
+  #[error("No container for the provided component type was found.")]
   ContainerNotFound
 }
 

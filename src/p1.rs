@@ -1,3 +1,4 @@
+use std::any::TypeId;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread::{self, JoinHandle};
 use std::sync::Arc;
@@ -5,43 +6,32 @@ use std::collections::HashSet;
 
 use crate::ecs::{Archetype, ArchetypeManager, Component, ComponentManager, EntityManager, Query, QueryData};
 use crate::error::{DataError, SystemError};
+use crate::event::{Event, EventData, EventListener, EventManager, Tick};
+use chrono::TimeDelta;
 use parking_lot::RwLock;
 
 pub struct P1 {
   entity_manager: EntityManager,
   archetype_manager: Arc<RwLock<ArchetypeManager>>,
   component_manager: Arc<RwLock<ComponentManager>>,
+  event_manager: Arc<RwLock<EventManager>>,
   // Systems need to exist soon and hold the handle
   thread_handles: Vec<JoinHandle<()>>,
   is_alive: Arc<AtomicBool>
 }
 
 impl P1 {
-  pub fn new(/*components: Vec<TypeId>*/) -> Self {
-    /*let timer = Arc::new(Mutex::new(0u32));
-    let clone = timer.clone();
-    let start = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    std::thread::spawn(move || {
-      loop {
-        let mut current = clone.lock().unwrap();
-        let since_the_epoch = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("Time went backwards");
-        *current = (since_the_epoch.as_millis() - start.as_millis()) as u32;
-        //dbg!(*current);
-      }
-    });*/
+  pub fn new() -> Self {
     P1 {
       entity_manager: EntityManager::new(),
       archetype_manager: Arc::new(RwLock::new(ArchetypeManager::new())),
       component_manager: Arc::new(RwLock::new(ComponentManager::new())),
+      event_manager: Arc::new(RwLock::new(EventManager::new())),
       thread_handles: Vec::new(),
       is_alive: Arc::new(AtomicBool::new(true))
     }
   }
-
+  
   pub fn create_entity(&mut self) -> u32 {
     self.entity_manager.create_entity()
   }
@@ -64,8 +54,8 @@ impl P1 {
   // Think of updating them with component changes though!
   // After second though, archetype initialization can be done outside system threads + readonly access can be requested every iteration instead of all time
   // Should make system struct to handle changes and iterations
-  pub fn register_system<D: QueryData + 'static>(&mut self, callback: for<'a, 'b> fn(Query<'a, 'b, D>)) -> Result<(), SystemError> {
-    let c_ids = D::component_ids();
+  pub fn register_system<Q: QueryData + 'static, E: EventData>(&mut self, callback: for<'iterable, 'item> fn(Query<'iterable, 'item, Q>, Event<E>)) -> Result<(), SystemError> {
+    let c_ids = Q::component_ids();
 
     let mut unique = HashSet::new();
 
@@ -80,16 +70,24 @@ impl P1 {
     // This is so I don't end up doing a 'static self borrow
     let archetype_manager = self.archetype_manager.clone();
     let component_manager = self.component_manager.clone();
+    let event_manager = self.event_manager.clone();
     let state = self.is_alive.clone();
+    let mut tick = Tick::new();
 
     let t = thread::spawn(move || {
       // Need event ticks soon
       while state.load(Ordering::Relaxed) {
-        let lock = component_manager.read();
-        let mut components: Vec<_> = archetype_manager.read().get(archetype_id).unwrap().entities().iter().map(|entity| {
-          D::fetch(&lock, entity).unwrap()
-        }).collect();
-        (callback)(Query::<D>::new(&mut components));
+        let check = event_manager.read().check::<E>(&tick);
+        if check.is_err() { panic!("{}", check.unwrap_err()) }
+
+        if check.unwrap() {
+          let lock = component_manager.read();
+          let mut components: Vec<_> = archetype_manager.read().get(archetype_id).unwrap().entities().iter().map(|entity| {
+            Q::fetch(&lock, entity).unwrap()
+          }).collect();
+          (callback)(Query::<Q>::new(&mut components), Event::new(E::get_item(tick.delta(&Tick::new()))));
+          tick.touch();
+        }
       }
     });
 
@@ -111,7 +109,7 @@ impl Drop for P1 {
 #[cfg(test)]
 mod tests {
   use super::{P1, Component, Query};
-  use crate::macros::Component;
+  use crate::{event::{Event, SimpleListener, builtin::{Start, Update}}, macros::Component};
   
   #[test]
   fn entity_creation() {
@@ -169,7 +167,7 @@ mod tests {
   fn query_deadlock() {
     let mut engine = P1::new();
 
-    let system = |_: Query<(&TestComponentA, &TestComponentA)>| {};
+    let system = |_: Query<(&TestComponentA, &TestComponentA)>, _: Event<Start>| {};
 
     if let Err(e) = engine.register_system(system) {
       panic!("{}", e);
