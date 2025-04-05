@@ -1,6 +1,9 @@
 use std::any::{Any, TypeId};
+use std::hash::BuildHasherDefault;
+
 use dashmap::Entry;
 use dashmap::{DashMap, mapref::one::{Ref, RefMut}};
+use rustc_hash::FxHasher;
 
 use crate::utility::ErasedMapContainer;
 
@@ -8,11 +11,11 @@ pub trait Component: Send + Sync + Any {
   // Need some input-controlled human-readable type names for component serialization
 }
 
-pub(crate) struct ComponentManager(DashMap<TypeId, ErasedMapContainer<u32>>);
+pub(crate) struct ComponentManager(DashMap<TypeId, ErasedMapContainer<u32>, BuildHasherDefault<FxHasher>>);
 
 impl ComponentManager {
   pub fn new() -> Self {
-    Self ( DashMap::new() )
+    Self ( DashMap::with_hasher(BuildHasherDefault::default()) )
   }
 
   pub fn get_container<C: Component>(&self) -> Option<Ref<'_, TypeId, ErasedMapContainer<u32>>> {

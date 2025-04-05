@@ -7,16 +7,18 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::ops::Add;
 use std::any::{Any, TypeId};
+use std::hash::BuildHasherDefault;
 
 use chrono::TimeDelta;
 use parking_lot::RwLock;
+use rustc_hash::FxHasher;
 
 
 
 pub trait EventData: Send + Sync + Any {
   type Item: Clone + Copy;
   
-  fn get_item(delta: TimeDelta/* , event_managers: _ */) -> Self::Item;
+  fn get_item(tick: &Tick/* , command_managers: _ */) -> Self::Item;
 }
 
 pub trait EventListener: Send + Sync + Any {
@@ -28,7 +30,7 @@ pub trait EventListener: Send + Sync + Any {
 pub struct SimpleListener(Arc<RwLock<Tick>>);
 
 impl SimpleListener {
-  fn new() -> Self {
+  pub fn new() -> Self {
     Self( Arc::new(RwLock::new(Tick::new())) )
   }
 }
@@ -42,21 +44,21 @@ impl EventListener for SimpleListener {
   }
 }
 
-pub struct IntervalListener<const I: u32 = 0u32>(Arc<RwLock<Tick>>);
+pub struct IntervalListener(Arc<RwLock<Tick>>, u32);
 
-impl<const I: u32> IntervalListener<I> {
-  fn new() -> Self {
-    Self( Arc::new(RwLock::new(Tick::new())) )
+impl IntervalListener {
+  pub fn new(interval: u32) -> Self {
+    Self( Arc::new(RwLock::new(Tick::new())), interval )
   }
 
   fn update(&self) {
-    let check = self.0.read().add(I).cmp(&Tick::new());
+    let check = self.0.read().add(self.1).cmp(&Tick::new());
     if check == Ordering::Less || check == Ordering::Equal {
       self.0.write().touch();
     }
   }
 }
-impl<const I: u32> EventListener for IntervalListener<I> {
+impl EventListener for IntervalListener {
   fn check(&self, other: &Tick) -> bool {
     self.update();
 
@@ -79,11 +81,11 @@ impl<E: EventData> Event<E> {
 }
 
 
-pub struct EventManager(HashMap<TypeId, Arc<RwLock<Box<dyn EventListener>>>>);
+pub struct EventManager(HashMap<TypeId, Arc<RwLock<Box<dyn EventListener>>>, BuildHasherDefault<FxHasher>>);
 
 impl EventManager {
   pub fn new() -> Self {
-    Self( HashMap::new() )
+    Self( HashMap::with_hasher(BuildHasherDefault::default()) )
   }
 
   pub fn register_listener<E: EventData, L: EventListener>(&mut self, listener: L) -> Result<(), EventError> {

@@ -1,8 +1,10 @@
 use std::any::TypeId;
 use std::mem::transmute;
+use std::hash::BuildHasherDefault;
 
 use dashmap::mapref::one::{Ref, RefMut};
 use dashmap::{DashMap, Entry};
+use rustc_hash::FxHasher;
 
 pub(crate) struct Archetype {
   c_ids: Vec<TypeId>,
@@ -26,11 +28,11 @@ impl Archetype {
 }
 
 
-pub(crate) struct ArchetypeManager(DashMap<u128, Archetype>);
+pub(crate) struct ArchetypeManager(DashMap<u128, Archetype, BuildHasherDefault<FxHasher>>);
 
 impl ArchetypeManager {
   pub fn new() -> Self {
-    Self ( DashMap::new() )
+    Self ( DashMap::with_hasher(BuildHasherDefault::default()) )
   }
 
   pub fn get(&self, archetype: u128) -> Option<Ref<'_, u128, Archetype>> {

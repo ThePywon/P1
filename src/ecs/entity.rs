@@ -1,5 +1,8 @@
 use std::{any::TypeId, collections::HashSet};
 use dashmap::DashMap;
+use std::hash::BuildHasherDefault;
+
+use rustc_hash::FxHasher;
 
 use super::Component;
 use crate::error::DataError;
@@ -7,7 +10,7 @@ use crate::error::DataError;
 pub(crate) struct EntityManager {
   // Need this to get the actual components the entity has instead of the matching archetypes
   // Useful when archetypes get created or deleted or when the components change
-  entities: DashMap<u32, Vec<TypeId>>,
+  entities: DashMap<u32, Vec<TypeId>, BuildHasherDefault<FxHasher>>,
   // Need this instead of self.entities.len() because later on will implement id recycling
   // So id allocation will become separate from self.entities.len()
   // Furthermore, this is not meant to be in a multithreaded context
@@ -17,7 +20,7 @@ pub(crate) struct EntityManager {
 
 impl EntityManager {
   pub fn new() -> Self {
-    EntityManager { entities: DashMap::new(), next_entity_id: 0u32 }
+    EntityManager { entities: DashMap::with_hasher(BuildHasherDefault::default()), next_entity_id: 0u32 }
   }
 
   pub fn create_entity(&mut self) -> u32 {

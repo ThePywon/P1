@@ -5,8 +5,9 @@ use std::sync::Arc;
 use std::collections::HashSet;
 
 use crate::ecs::{Archetype, ArchetypeManager, Component, ComponentManager, EntityManager, Query, QueryData};
-use crate::error::{DataError, SystemError};
-use crate::event::{Event, EventData, EventListener, EventManager, Tick};
+use crate::error::{DataError, EventError, SystemError};
+use crate::event::builtin::Update;
+use crate::event::{Event, EventData, EventListener, EventManager, IntervalListener, Tick};
 use chrono::TimeDelta;
 use parking_lot::RwLock;
 
@@ -21,15 +22,17 @@ pub struct P1 {
 }
 
 impl P1 {
-  pub fn new() -> Self {
-    P1 {
+  pub fn new() -> Result<Self, EventError> {
+    let mut event_manager = EventManager::new();
+    event_manager.register_listener::<Update, _>(IntervalListener::new(0))?;
+    Ok(P1 {
       entity_manager: EntityManager::new(),
       archetype_manager: Arc::new(RwLock::new(ArchetypeManager::new())),
       component_manager: Arc::new(RwLock::new(ComponentManager::new())),
-      event_manager: Arc::new(RwLock::new(EventManager::new())),
+      event_manager: Arc::new(RwLock::new(event_manager)),
       thread_handles: Vec::new(),
       is_alive: Arc::new(AtomicBool::new(true))
-    }
+    })
   }
   
   pub fn create_entity(&mut self) -> u32 {
@@ -85,7 +88,7 @@ impl P1 {
           let mut components: Vec<_> = archetype_manager.read().get(archetype_id).unwrap().entities().iter().map(|entity| {
             Q::fetch(&lock, entity).unwrap()
           }).collect();
-          (callback)(Query::<Q>::new(&mut components), Event::new(E::get_item(tick.delta(&Tick::new()))));
+          (callback)(Query::<Q>::new(&mut components), Event::new(E::get_item(&tick)));
           tick.touch();
         }
       }
@@ -109,11 +112,11 @@ impl Drop for P1 {
 #[cfg(test)]
 mod tests {
   use super::{P1, Component, Query};
-  use crate::{event::{Event, SimpleListener, builtin::{Start, Update}}, macros::Component};
+  use crate::{event::{builtin::Update, Event, SimpleListener}, macros::Component};
   
   #[test]
   fn entity_creation() {
-    let mut engine = P1::new();
+    let mut engine = P1::new().unwrap();
     let entity_a = engine.create_entity();
     let entity_b = engine.create_entity();
     let entity_c = engine.create_entity();
@@ -131,7 +134,7 @@ mod tests {
 
   #[test]
   fn assigning_components() {
-    let mut engine = P1::new();
+    let mut engine = P1::new().unwrap();
     let entity = engine.create_entity();
     engine.add_component(entity, TestComponentA {}).unwrap();
     engine.add_component(entity, TestComponentB {}).unwrap();
@@ -144,7 +147,7 @@ mod tests {
   #[test]
   #[should_panic(expected = "Cannot attach component to entity because a component of that type is already attached.")]
   fn assigning_preexisting_component() {
-    let mut engine = P1::new();
+    let mut engine = P1::new().unwrap();
     let entity = engine.create_entity();
     engine.add_component(entity, TestComponentA {}).unwrap();
     if let Err(e) = engine.add_component(entity, TestComponentA {}) {
@@ -155,7 +158,7 @@ mod tests {
   #[test]
   #[should_panic(expected = "No entities with the provided id was found.")]
   fn non_existant_entity() {
-    let mut engine = P1::new();
+    let mut engine = P1::new().unwrap();
     // No entities were created, any id is invalid
     if let Err(e) = engine.add_component(0, TestComponentA {}) {
       panic!("{}", e);
@@ -165,9 +168,9 @@ mod tests {
   #[test]
   #[should_panic(expected = "Not all query items in system were unique.")]
   fn query_deadlock() {
-    let mut engine = P1::new();
+    let mut engine = P1::new().unwrap();
 
-    let system = |_: Query<(&TestComponentA, &TestComponentA)>, _: Event<Start>| {};
+    let system = |_: Query<(&TestComponentA, &TestComponentA)>, _: Event<Update>| {};
 
     if let Err(e) = engine.register_system(system) {
       panic!("{}", e);

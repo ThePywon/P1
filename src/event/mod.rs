@@ -1,5 +1,6 @@
 mod tick;
 mod event;
+mod input;
 pub mod builtin;
 
 pub use tick::Tick;
