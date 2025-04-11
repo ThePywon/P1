@@ -13,9 +13,12 @@ impl Lexer<WonTokenKind> for WonLexer {
     while index < input.len() {
       tokens.push(match input[index] {
         b' ' | b'\t' | b'\n' | b'\r' => { index += 1; continue },
+        b'(' => Self::create_token(WonTokenKind::GroupStart, input, &mut index, 1),
+        b')' => Self::create_token(WonTokenKind::GroupEnd, input, &mut index, 1),
         b':' => Self::create_token(WonTokenKind::DeclType, input, &mut index, 1),
         b';' => Self::create_token(WonTokenKind::EndStatement, input, &mut index, 1),
         b'=' => Self::create_token(WonTokenKind::Assign, input, &mut index, 1),
+        b',' => Self::create_token(WonTokenKind::ItemSeparator, input, &mut index, 1),
         b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
           Self::handle_identifier(&input, &mut index)
         },

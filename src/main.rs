@@ -55,9 +55,10 @@ fn main() {
   engine.add_component(my_entity, I {}).unwrap();
 
   let tokens = WonLexer::lex(b"
-  let my_var = 2;
+  let my_var = (2 as usize) as u32;;;;;;;;;;;
   let another_var = false;
   let undefined_var: bool;
+  print(test, test2, test3);
   ");
   dbg!(&tokens);
 

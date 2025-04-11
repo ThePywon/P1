@@ -1,4 +1,4 @@
-use crate::{parser::{Parser, ParserError}, token::{SpanContainer, Token}};
+use crate::{parser::{Parser, ParserError}, token::{Span, SpanContainer, Token}};
 use super::{statement::*, token::WonTokenKind};
 
 use std::{iter::Peekable, vec::IntoIter};
@@ -10,30 +10,44 @@ impl<'src> Parser<'src, WonTokenKind, Statement<'src>> for WonParser {
     let mut output = Vec::new();
 
     while token_iterator.peek().is_some() {
-      let token = token_iterator.next().unwrap();
-      let kind = token.kind;
+      let kind = token_iterator.peek().unwrap().kind;
       output.push(match kind {
-        WonTokenKind::Let => Self::parse_assign(&mut token_iterator, Some(SpanContainer::from_token(token, StorageKind::Simple))),
-        WonTokenKind::Const => Self::parse_assign(&mut token_iterator, Some(SpanContainer::from_token(token, StorageKind::Constant))),
-        _ => continue
+        WonTokenKind::Let => {
+          let token = token_iterator.next().unwrap();
+          Self::parse_decl_assign(&mut token_iterator, Some(SpanContainer::from_token(token, StorageKind::Simple))) 
+        },
+        WonTokenKind::Const => {
+          let token = token_iterator.next().unwrap();
+          Self::parse_decl_assign(&mut token_iterator, Some(SpanContainer::from_token(token, StorageKind::Constant)))
+        },
+        WonTokenKind::EndStatement => {
+          token_iterator.next();
+          Ok(Statement::Trail)
+        },
+        _ => Self::parse_expression(&mut token_iterator, ExpressionContext::Simple).map(|e| e.into())
       }.unwrap());
     }
 
     output
   }
 }
+
+type StatementResult<'src> = Result<Statement<'src>, ParserError<'src, WonTokenKind>>;
+type ExpressionResult<'src> = Result<SpanContainer<'src, Expression<'src>>, ParserError<'src, WonTokenKind>>;
+type TokenResult<'src> = Result<Token<'src, WonTokenKind>, ParserError<'src, WonTokenKind>>;
+
 impl WonParser {
-  fn parse_assign<'src>(tokens: &mut Peekable<IntoIter<Token<'src, WonTokenKind>>>, storage: Option<SpanContainer<'src, StorageKind>>) -> Result<Statement<'src>, ParserError<'src, WonTokenKind>> {
+  fn parse_decl_assign<'src>(tokens: &mut Peekable<IntoIter<Token<'src, WonTokenKind>>>, storage: Option<SpanContainer<'src, StorageKind>>) -> StatementResult<'src> {
     let identifier = Self::expect_token(tokens.next(), WonTokenKind::Identifier)?.span;
 
     return match tokens.next().ok_or(ParserError::UnexpectedEOF)?.kind {
       WonTokenKind::DeclType => {
-        let ty = Some(Self::parse_type(tokens.next())?);
+        let ty = Some(Self::expect_token(tokens.next(), WonTokenKind::Identifier)?.span);
         let mut expression = None;
 
         match tokens.next().ok_or(ParserError::UnexpectedEOF)?.kind {
           WonTokenKind::Assign => {
-            expression = Some(Self::parse_expression(tokens)?);
+            expression = Some(Self::parse_expression(tokens, ExpressionContext::Simple)?);
           },
           WonTokenKind::EndStatement => {},
           kind => {
@@ -44,7 +58,7 @@ impl WonParser {
         Ok(Statement::Assignement { storage, identifier, ty, expression })
       },
       WonTokenKind::Assign => {
-        Ok(Statement::Assignement { storage, identifier, ty: None, expression: Some(Self::parse_expression(tokens)?) })
+        Ok(Statement::Assignement { storage, identifier, ty: None, expression: Some(Self::parse_expression(tokens, ExpressionContext::Simple)?) })
       },
       WonTokenKind::EndStatement => {
         Ok(Statement::Assignement { storage, identifier, ty: None, expression: None })
@@ -55,36 +69,81 @@ impl WonParser {
     }
   }
 
-  fn parse_expression<'src>(tokens: &mut Peekable<IntoIter<Token<'src, WonTokenKind>>>) -> Result<SpanContainer<'src, Expression>, ParserError<'src, WonTokenKind>> {
-    let mut result = Err(ParserError::UnexpectedEOF);
+  fn parse_expression<'src>(tokens: &mut Peekable<IntoIter<Token<'src, WonTokenKind>>>, context: ExpressionContext) -> ExpressionResult<'src> {
+    let lhs_token = tokens.next().unwrap();
+    let lhs_kind = lhs_token.kind;
+    let lhs_span = lhs_token.span;
+    let lhs = match lhs_kind {
+      WonTokenKind::GroupStart => Self::parse_expression(tokens, ExpressionContext::InnerGroup),
+      WonTokenKind::True | WonTokenKind::False => Ok(SpanContainer::from_token(lhs_token, Expression::Literal(LiteralKind::Bool))),
+      WonTokenKind::Number => Ok(SpanContainer::from_token(lhs_token, Expression::Literal(LiteralKind::Integer))),
+      WonTokenKind::Identifier => Ok(SpanContainer::from_token(lhs_token, Expression::Access(Access))),
+      kind => Err(ParserError::ExpectedStatement(kind))
+    }?;
 
-    // Need to actually loop here eventually, once I have expression comprised of more than one token
-    //while tokens.peek().is_some() {
-      let token = tokens.next().unwrap();
-      let kind = token.kind;
-      result = match kind {
-        WonTokenKind::True | WonTokenKind::False => Ok(SpanContainer::from_token(token, Expression::Literal(LiteralExprKind::Bool))),
-        WonTokenKind::Number => Ok(SpanContainer::from_token(token, Expression::Literal(LiteralExprKind::Integer))),
-        kind => Err(ParserError::ExpectedStatement(kind))
-      };
-    //}
+    // Need to check for operators real soon!
+    let rhs_token = tokens.peek().unwrap();
+    let rhs_kind = rhs_token.kind;
+    let rhs_span = rhs_token.span;
+    match rhs_kind {
+      WonTokenKind::As => {
+        tokens.next();
+        let rhs = Self::expect_token(tokens.next(), WonTokenKind::Identifier)?.span;
 
-    // Will also need to properly check for EndStatement in the loop
-    Self::expect_token(tokens.next(), WonTokenKind::EndStatement)?;
+        Self::expect_token(tokens.next(), if context == ExpressionContext::InnerGroup { WonTokenKind::GroupEnd } else { WonTokenKind::EndStatement })?;
 
-    result
+        Ok(SpanContainer { span: Span {
+          index: lhs_span.index,
+          length: rhs.index - lhs_span.index + rhs.length,
+          source: rhs_span.source
+        }, item: Expression::PrimitiveCast {
+          expression: lhs.boxed(),
+          ty: rhs }})
+      },
+      WonTokenKind::GroupStart => {
+        tokens.next();
+        if lhs_kind == WonTokenKind::Identifier {
+          let mut items = Vec::new();
+
+          while tokens.peek().is_some() {
+            let token = tokens.peek().unwrap();
+            let kind = token.kind;
+      
+            items.push(match kind {
+              WonTokenKind::GroupEnd => break,
+              WonTokenKind::ItemSeparator => { tokens.next(); continue },
+              _ => Self::parse_expression(tokens, ExpressionContext::Pack)
+            }?);
+          }
+
+          let end = Self::expect_token(tokens.next(), WonTokenKind::GroupEnd)?;
+          Self::expect_token(tokens.next(), WonTokenKind::EndStatement)?;
+          Ok(SpanContainer { span: Span {
+            index: lhs_span.index,
+            length: end.span.index - lhs_span.index + end.span.length,
+            source: rhs_span.source
+          }, item: Expression::FunctionCall {
+            access: lhs.map(|e| e.into()), items
+          }})
+        } else {
+          Err(ParserError::UnexpectedToken(rhs_kind, if context == ExpressionContext::InnerGroup { WonTokenKind::GroupEnd } else { WonTokenKind::EndStatement }))
+        }
+      }
+      kind => {
+        if context.should_break(&kind) {
+          Ok(lhs)
+        } else {
+          Err(match kind {
+            WonTokenKind::ItemSeparator | WonTokenKind::GroupEnd | WonTokenKind::EndStatement => 
+              ParserError::UnexpectedToken(kind, if context == ExpressionContext::InnerGroup { WonTokenKind::GroupEnd } else { WonTokenKind::EndStatement }),
+            kind => ParserError::ExpectedStatement(kind)
+          })
+        }
+      }
+    }
   }
 
-  fn parse_type<'src>(next: Option<Token<'src, WonTokenKind>>) -> Result<SpanContainer<'src, Type>, ParserError<'src, WonTokenKind>> {
-    let identifier: Token<'src, WonTokenKind> = Self::expect_token(next, WonTokenKind::Identifier)?;
-
-    Ok(match identifier.span.get() {
-      "bool" => SpanContainer::from_token(identifier, Type::Bool),
-      content => { return Err(ParserError::TypeNotFound(content)); }
-    })
-  }
-
-  fn expect_token<'src>(next: Option<Token<'src, WonTokenKind>>, kind: WonTokenKind) -> Result<Token<'src, WonTokenKind>, ParserError<'src, WonTokenKind>> {
+  fn expect_token<'src>(next: Option<Token<'src, WonTokenKind>>, kind: WonTokenKind) -> TokenResult<'src> {
     let token = next.ok_or(ParserError::UnexpectedEOF)?;
     
     if token.kind == kind {

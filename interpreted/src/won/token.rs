@@ -14,6 +14,9 @@ pub enum WonTokenKind {
 
   #[meta(symbol)] DeclType,
   #[meta(symbol)] EndStatement,
+  #[meta(symbol)] GroupStart,
+  #[meta(symbol)] GroupEnd,
+  #[meta(symbol)] ItemSeparator,
 
   #[meta(operator)] Assign,
 }
