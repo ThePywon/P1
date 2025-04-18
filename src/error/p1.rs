@@ -7,7 +7,7 @@ pub enum P1Error {
   #[error(transparent)]
   Data(#[from] DataError),
   #[error(transparent)]
-  System(#[from] SystemError)
+  System(#[from] SystemError),
 }
 
 impl From<InternalDataError> for P1Error {

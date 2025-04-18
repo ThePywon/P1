@@ -1,28 +1,32 @@
-mod error;
-mod utility;
 mod ecs;
+mod error;
 mod event;
-mod rendering;
 mod p1;
+mod rendering;
+mod utility;
 
 extern crate macros;
 
 use std::ffi::CString;
 
-use interpreted::{lexer::Lexer, parser::Parser, won::{lexer::WonLexer, parser::WonParser}};
-use event::{builtin::Update, Event, IntervalListener};
-use macros::Component;
-use serde::{Serialize, Deserialize};
 use ecs::{Component, Query};
+use event::{builtin::Update, Event, IntervalListener};
+use interpreted::{
+  lexer::Lexer,
+  parser::Parser,
+  won::{lexer::WonLexer, parser::WonParser},
+};
+use macros::Component;
 use p1::P1;
+use serde::{Deserialize, Serialize};
 
-use winit::window::Window;
 use eval::{eval, Expr, Function};
+use winit::window::Window;
 
 #[derive(Serialize, Deserialize, Debug, Component, Clone, Copy)]
 struct A {
   position: (i32, i32),
-  scale: (i32, i32)
+  scale: (i32, i32),
 }
 
 #[derive(Component)]
@@ -47,24 +51,36 @@ fn main() {
   let my_entity = engine.create_entity();
   let entity_b = engine.create_entity();
   let entity_c = engine.create_entity();
-  dbg!(my_entity);
-  dbg!(entity_b);
-  dbg!(entity_c);
-  engine.add_component(my_entity, A { position: (1, 2), scale: (3, 4) }).unwrap();
+  //dbg!(my_entity);
+  //dbg!(entity_b);
+  //dbg!(entity_c);
+  engine
+    .add_component(
+      my_entity,
+      A {
+        position: (1, 2),
+        scale: (3, 4),
+      },
+    )
+    .unwrap();
   engine.add_component(my_entity, C {}).unwrap();
   engine.add_component(my_entity, I {}).unwrap();
 
-  let tokens = WonLexer::lex(b"
+  let tokens = WonLexer::lex(
+    b"
   let my_var = (2 as usize) as u32;;;;;;;;;;;
   let another_var = false;
   let undefined_var: bool;
   print(test, test2, test3);
-  ");
-  dbg!(&tokens);
+  ",
+  );
+  //dbg!(&tokens);
+
+  println!("{}", tokens[35].span);
 
   let ast = WonParser::parse(tokens);
-  dbg!(&ast);
-  
+  //dbg!(&ast);
+
   //let arc = engine.get_component::<A>(my_entity).unwrap();
   //dbg!(arc.downcast_ref::<A>());
 
@@ -88,11 +104,11 @@ fn main() {
 
       fun function_name(arg_name: arg_type) -> return_type {
         if condition {
-        
+
         } else if {
-        
+
         } else {
-        
+
         }
         return value;
       }

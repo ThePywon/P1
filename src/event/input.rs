@@ -1,11 +1,7 @@
 use super::Tick;
 
-pub struct InputManager {
-
-}
+pub struct InputManager {}
 
 impl InputManager {
-  pub fn gl_input_callback() {
-    
-  }
+  pub fn gl_input_callback() {}
 }

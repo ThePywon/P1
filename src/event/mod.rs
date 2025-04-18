@@ -1,10 +1,10 @@
-mod tick;
+pub mod builtin;
 mod event;
 mod input;
-pub mod builtin;
+mod tick;
 
+pub use event::{Event, EventData, EventListener, EventManager, IntervalListener, SimpleListener};
 pub use tick::Tick;
-pub use event::{Event, EventData, EventListener, SimpleListener, IntervalListener, EventManager};
 
 #[cfg(test)]
 mod tests {
@@ -35,6 +35,6 @@ mod tests {
     assert!(b.cmp(&a) == Ordering::Greater);
     assert!(a.cmp(&b) == Ordering::Less);
   }
-  
+
   // Need more operators for ticks to test with
 }

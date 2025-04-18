@@ -8,14 +8,14 @@ use dashmap::mapref::one::{MappedRef, MappedRefMut};
 use parking_lot::RwLockReadGuard;
 
 use super::{Component, ComponentManager};
-use crate::utility::ErasedMapContainer;
 use crate::error::{DataError, InternalDataError};
+use crate::utility::ErasedMapContainer;
 
 pub struct Query<'iterable, 'item: 'iterable, D: QueryData>(&'iterable mut Vec<D::Item<'item>>);
 
 impl<'iterable, 'item: 'iterable, D: QueryData> Query<'iterable, 'item, D> {
   pub fn new(data: &'iterable mut Vec<D::Item<'item>>) -> Self {
-    Self( data )
+    Self(data)
   }
 
   pub fn iter(&self) -> Iter<'_, D::Item<'item>> {
@@ -34,13 +34,19 @@ unsafe impl<C: Component> Sync for ComponentRef<'_, C> {}
 impl<'a, C: Component> Deref for ComponentRef<'a, C> {
   type Target = MappedRef<'a, TypeId, ErasedMapContainer<u32>, C>;
 
-  fn deref(&self) -> &Self::Target { &self.0 }
+  fn deref(&self) -> &Self::Target {
+    &self.0
+  }
 }
 impl<C: Component> DerefMut for ComponentRef<'_, C> {
-  fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+  fn deref_mut(&mut self) -> &mut Self::Target {
+    &mut self.0
+  }
 }
 impl<C: Component + Debug> Debug for ComponentRef<'_, C> {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.0.value().fmt(f) }
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    self.0.value().fmt(f)
+  }
 }
 
 pub struct ComponentRefMut<'a, C: Component>(MappedRefMut<'a, TypeId, ErasedMapContainer<u32>, C>);
@@ -51,22 +57,30 @@ unsafe impl<C: Component> Sync for ComponentRefMut<'_, C> {}
 impl<'a, C: Component> Deref for ComponentRefMut<'a, C> {
   type Target = MappedRefMut<'a, TypeId, ErasedMapContainer<u32>, C>;
 
-  fn deref(&self) -> &Self::Target { &self.0 }
+  fn deref(&self) -> &Self::Target {
+    &self.0
+  }
 }
-impl< C: Component> DerefMut for ComponentRefMut<'_, C> {
-  fn deref_mut(&mut self) -> &mut Self::Target { &mut self.0 }
+impl<C: Component> DerefMut for ComponentRefMut<'_, C> {
+  fn deref_mut(&mut self) -> &mut Self::Target {
+    &mut self.0
+  }
 }
 impl<C: Component + Debug> Debug for ComponentRefMut<'_, C> {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result { self.0.value().fmt(f) }
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    self.0.value().fmt(f)
+  }
 }
-
 
 pub trait QueryData {
   type Item<'item>: Send + Sync;
-  
+
   fn component_ids() -> Vec<TypeId>;
   #[allow(private_interfaces)]
-  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError>;
+  fn fetch<'item>(
+    component_manager: &'item RwLockReadGuard<'_, ComponentManager>,
+    entity: &u32,
+  ) -> Result<Self::Item<'item>, DataError>;
 }
 
 impl<C: Component> QueryData for &C {
@@ -76,9 +90,14 @@ impl<C: Component> QueryData for &C {
     vec![TypeId::of::<C>()]
   }
   #[allow(private_interfaces)]
-  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError> {
-    let container = component_manager.get_container::<C>().ok_or(InternalDataError::ContainerNotFound)?;
-    Ok(ComponentRef(container.map(|c| c.get::<C>(&entity).unwrap())))
+  fn fetch<'item>(
+    component_manager: &'item RwLockReadGuard<'_, ComponentManager>,
+    entity: &u32,
+  ) -> Result<Self::Item<'item>, DataError> {
+    let container = component_manager
+      .get_container::<C>()
+      .ok_or(InternalDataError::ContainerNotFound)?;
+    Ok(ComponentRef(container.map(|c| c.get::<C>(entity).unwrap())))
   }
 }
 
@@ -89,9 +108,16 @@ impl<C: Component> QueryData for &mut C {
     vec![TypeId::of::<C>()]
   }
   #[allow(private_interfaces)]
-  fn fetch<'item>(component_manager: &'item RwLockReadGuard<'_, ComponentManager>, entity: &u32) -> Result<Self::Item<'item>, DataError> {
-    let container = component_manager.get_container_mut::<C>().ok_or(InternalDataError::ContainerNotFound)?;
-    Ok(ComponentRefMut(container.map(|c| c.get_mut::<C>(&entity).unwrap())))
+  fn fetch<'item>(
+    component_manager: &'item RwLockReadGuard<'_, ComponentManager>,
+    entity: &u32,
+  ) -> Result<Self::Item<'item>, DataError> {
+    let container = component_manager
+      .get_container_mut::<C>()
+      .ok_or(InternalDataError::ContainerNotFound)?;
+    Ok(ComponentRefMut(
+      container.map(|c| c.get_mut::<C>(entity).unwrap()),
+    ))
   }
 }
 
@@ -102,7 +128,12 @@ impl QueryData for () {
     Vec::new()
   }
   #[allow(private_interfaces)]
-  fn fetch<'item>(_: &'item RwLockReadGuard<'_, ComponentManager>, _: &u32) -> Result<Self::Item<'item>, DataError> { Ok(()) }
+  fn fetch<'item>(
+    _: &'item RwLockReadGuard<'_, ComponentManager>,
+    _: &u32,
+  ) -> Result<Self::Item<'item>, DataError> {
+    Ok(())
+  }
 }
 
 macro_rules! impl_querydata {
@@ -137,4 +168,4 @@ macro_rules! impl_querydata {
   }
 }
 
-impl_querydata!{A, B, C, D, E, F, G, H}
+impl_querydata! {A, B, C, D, E, F, G, H}

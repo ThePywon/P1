@@ -1,10 +1,12 @@
 use std::any::TypeId;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::thread::{self, JoinHandle};
-use std::sync::Arc;
 use std::collections::HashSet;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+use std::thread::{self, JoinHandle};
 
-use crate::ecs::{Archetype, ArchetypeManager, Component, ComponentManager, EntityManager, Query, QueryData};
+use crate::ecs::{
+  Archetype, ArchetypeManager, Component, ComponentManager, EntityManager, Query, QueryData,
+};
 use crate::error::{DataError, EventError, SystemError};
 use crate::event::builtin::Update;
 use crate::event::{Event, EventData, EventListener, EventManager, IntervalListener, Tick};
@@ -18,7 +20,7 @@ pub struct P1 {
   event_manager: Arc<RwLock<EventManager>>,
   // Systems need to exist soon and hold the handle
   thread_handles: Vec<JoinHandle<()>>,
-  is_alive: Arc<AtomicBool>
+  is_alive: Arc<AtomicBool>,
 }
 
 impl P1 {
@@ -31,10 +33,10 @@ impl P1 {
       component_manager: Arc::new(RwLock::new(ComponentManager::new())),
       event_manager: Arc::new(RwLock::new(event_manager)),
       thread_handles: Vec::new(),
-      is_alive: Arc::new(AtomicBool::new(true))
+      is_alive: Arc::new(AtomicBool::new(true)),
     })
   }
-  
+
   pub fn create_entity(&mut self) -> u32 {
     self.entity_manager.create_entity()
   }
@@ -43,27 +45,38 @@ impl P1 {
     self.entity_manager.has_component::<C>(entity)
   }
 
-  pub fn add_component<C: Component +  'static>(&mut self, entity: u32, component: C) -> Result<(), DataError> {
+  pub fn add_component<C: Component + 'static>(
+    &mut self,
+    entity: u32,
+    component: C,
+  ) -> Result<(), DataError> {
     if self.has_component::<C>(entity)? {
-      return Err(DataError::ComponentExistsForEntity)
+      return Err(DataError::ComponentExistsForEntity);
     }
     self.entity_manager.add_component::<C>(entity)?;
 
-    self.component_manager.write().create_container::<C>()
-      .insert(entity, component).map_err(|e| e.into())
+    self
+      .component_manager
+      .write()
+      .create_container::<C>()
+      .insert(entity, component)
+      .map_err(|e| e.into())
   }
 
   // Change archetypes to literally be a per system cache or if not, make sure they don't require a mutable access
   // Think of updating them with component changes though!
   // After second though, archetype initialization can be done outside system threads + readonly access can be requested every iteration instead of all time
   // Should make system struct to handle changes and iterations
-  pub fn register_system<Q: QueryData + 'static, E: EventData>(&mut self, callback: for<'iterable, 'item> fn(Query<'iterable, 'item, Q>, Event<E>)) -> Result<(), SystemError> {
+  pub fn register_system<Q: QueryData + 'static, E: EventData>(
+    &mut self,
+    callback: for<'iterable, 'item> fn(Query<'iterable, 'item, Q>, Event<E>),
+  ) -> Result<(), SystemError> {
     let c_ids = Q::component_ids();
 
     let mut unique = HashSet::new();
 
     if !c_ids.clone().into_iter().all(move |x| unique.insert(x)) {
-      return Err(SystemError::QueryDeadlock)
+      return Err(SystemError::QueryDeadlock);
     }
 
     let archetype_id = Archetype::id_from_c_ids(&c_ids);
@@ -81,14 +94,24 @@ impl P1 {
       // Need event ticks soon
       while state.load(Ordering::Relaxed) {
         let check = event_manager.read().check::<E>(&tick);
-        if check.is_err() { panic!("{}", check.unwrap_err()) }
+        if check.is_err() {
+          panic!("{}", check.unwrap_err())
+        }
 
         if check.unwrap() {
           let lock = component_manager.read();
-          let mut components: Vec<_> = archetype_manager.read().get(archetype_id).unwrap().entities().iter().map(|entity| {
-            Q::fetch(&lock, entity).unwrap()
-          }).collect();
-          (callback)(Query::<Q>::new(&mut components), Event::new(E::get_item(&tick)));
+          let mut components: Vec<_> = archetype_manager
+            .read()
+            .get(archetype_id)
+            .unwrap()
+            .entities()
+            .iter()
+            .map(|entity| Q::fetch(&lock, entity).unwrap())
+            .collect();
+          (callback)(
+            Query::<Q>::new(&mut components),
+            Event::new(E::get_item(&tick)),
+          );
           tick.touch();
         }
       }
@@ -111,9 +134,12 @@ impl Drop for P1 {
 
 #[cfg(test)]
 mod tests {
-  use super::{P1, Component, Query};
-  use crate::{event::{builtin::Update, Event, SimpleListener}, macros::Component};
-  
+  use super::{Component, Query, P1};
+  use crate::{
+    event::{builtin::Update, Event, SimpleListener},
+    macros::Component,
+  };
+
   #[test]
   fn entity_creation() {
     let mut engine = P1::new().unwrap();
@@ -145,7 +171,9 @@ mod tests {
   }
 
   #[test]
-  #[should_panic(expected = "Cannot attach component to entity because a component of that type is already attached.")]
+  #[should_panic(
+    expected = "Cannot attach component to entity because a component of that type is already attached."
+  )]
   fn assigning_preexisting_component() {
     let mut engine = P1::new().unwrap();
     let entity = engine.create_entity();

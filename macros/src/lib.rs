@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 //use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{Fields, Ident, Path};
+use syn::{Fields, Ident};
 
 #[proc_macro_derive(Component)]
 pub fn component_derive(input: TokenStream) -> TokenStream {
@@ -9,7 +9,8 @@ pub fn component_derive(input: TokenStream) -> TokenStream {
   let name = &ast.ident;
   quote! {
     impl Component for #name {}
-  }.into()
+  }
+  .into()
 }
 
 #[proc_macro_derive(EventData)]
@@ -19,10 +20,11 @@ pub fn event_data_derive(input: TokenStream) -> TokenStream {
   quote! {
     impl EventData for #name {
       type Item = TimeDelta;
-    
+
       fn get_item(tick: &Tick/* , command_managers: _ */) -> Self::Item { tick.delta(&Tick::new()) }
     }
-  }.into()
+  }
+  .into()
 }
 
 #[proc_macro_derive(TokenKind, attributes(meta))]
@@ -31,7 +33,7 @@ pub fn token_kind_derive(input: TokenStream) -> TokenStream {
   let name = &ast.ident;
   let data_enum: syn::DataEnum = match ast.data {
     syn::Data::Enum(data) => data,
-    _ => panic!("Failed to parse TokenKind, parsing data is not an enum.")
+    _ => panic!("Failed to parse TokenKind, parsing data is not an enum."),
   };
 
   let mut match_arms_ident: Vec<&Ident> = Vec::new();

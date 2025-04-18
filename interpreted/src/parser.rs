@@ -7,13 +7,13 @@ pub trait Parser<'src, K: TokenKind, Output> {
 }
 
 #[derive(Error, Debug)]
-pub enum ParserError<'src, K: TokenKind> {
+pub enum ParserError<K: TokenKind> {
   #[error("Unexpected end of file.")]
   UnexpectedEOF,
   #[error("Unexpected token, got {0}, expected {1}")]
   UnexpectedToken(K, K),
-  #[error("Type for name \"{0}\" not found.")]
-  TypeNotFound(&'src str),
   #[error("Expected statement, got {0}")]
-  ExpectedStatement(K)
+  ExpectedStatement(K),
 }
+
+// TODO: Make an error class that handles the error message with indexes and context

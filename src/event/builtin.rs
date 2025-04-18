@@ -1,7 +1,7 @@
 use std::any::TypeId;
 
-use crate::error::EventError;
 use super::{EventData, EventManager, IntervalListener, SimpleListener, Tick};
+use crate::error::EventError;
 
 use chrono::TimeDelta;
 use macros::EventData;

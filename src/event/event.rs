@@ -1,24 +1,22 @@
 use super::Tick;
 use crate::error::EventError;
 
+use std::any::{Any, TypeId};
 use std::cmp::Ordering;
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
-use std::sync::Arc;
-use std::ops::Add;
-use std::any::{Any, TypeId};
 use std::hash::BuildHasherDefault;
+use std::ops::Add;
+use std::sync::Arc;
 
 use chrono::TimeDelta;
 use parking_lot::RwLock;
 use rustc_hash::FxHasher;
 
-
-
 pub trait EventData: Send + Sync + Any {
   type Item: Clone + Copy;
-  
-  fn get_item(tick: &Tick/* , command_managers: _ */) -> Self::Item;
+
+  fn get_item(tick: &Tick /* , command_managers: _ */) -> Self::Item;
 }
 
 pub trait EventListener: Send + Sync + Any {
@@ -31,7 +29,7 @@ pub struct SimpleListener(Arc<RwLock<Tick>>);
 
 impl SimpleListener {
   pub fn new() -> Self {
-    Self( Arc::new(RwLock::new(Tick::new())) )
+    Self(Arc::new(RwLock::new(Tick::new())))
   }
 }
 impl EventListener for SimpleListener {
@@ -48,7 +46,7 @@ pub struct IntervalListener(Arc<RwLock<Tick>>, u32);
 
 impl IntervalListener {
   pub fn new(interval: u32) -> Self {
-    Self( Arc::new(RwLock::new(Tick::new())), interval )
+    Self(Arc::new(RwLock::new(Tick::new())), interval)
   }
 
   fn update(&self) {
@@ -74,24 +72,32 @@ pub struct Event<E: EventData>(E::Item);
 
 impl<E: EventData> Event<E> {
   pub fn new(data: E::Item) -> Self {
-    Self( data )
+    Self(data)
   }
 
-  pub fn get_data(&self) -> E::Item { self.0 }
+  pub fn get_data(&self) -> E::Item {
+    self.0
+  }
 }
 
-
-pub struct EventManager(HashMap<TypeId, Arc<RwLock<Box<dyn EventListener>>>, BuildHasherDefault<FxHasher>>);
+type EventListenerMap =
+  HashMap<TypeId, Arc<RwLock<Box<dyn EventListener>>>, BuildHasherDefault<FxHasher>>;
+pub struct EventManager(EventListenerMap);
 
 impl EventManager {
   pub fn new() -> Self {
-    Self( HashMap::with_hasher(BuildHasherDefault::default()) )
+    Self(HashMap::with_hasher(BuildHasherDefault::default()))
   }
 
-  pub fn register_listener<E: EventData, L: EventListener>(&mut self, listener: L) -> Result<(), EventError> {
+  pub fn register_listener<E: EventData, L: EventListener>(
+    &mut self,
+    listener: L,
+  ) -> Result<(), EventError> {
     match self.0.entry(TypeId::of::<E>()) {
-      Entry::Vacant(entry) => { entry.insert(Arc::new(RwLock::new(Box::new(listener)))); },
-      Entry::Occupied(_) => { return Err(EventError::EventAlreadyRegistered(TypeId::of::<E>())) }
+      Entry::Vacant(entry) => {
+        entry.insert(Arc::new(RwLock::new(Box::new(listener))));
+      }
+      Entry::Occupied(_) => return Err(EventError::EventAlreadyRegistered(TypeId::of::<E>())),
     }
 
     Ok(())
@@ -99,12 +105,25 @@ impl EventManager {
 
   pub fn check<E: EventData>(&self, tick: &Tick) -> Result<bool, EventError> {
     let key = TypeId::of::<E>();
-    Ok(self.0.get(&key).ok_or(EventError::EventNotFound(key))?.read().check(tick))
+    Ok(
+      self
+        .0
+        .get(&key)
+        .ok_or(EventError::EventNotFound(key))?
+        .read()
+        .check(tick),
+    )
   }
 
   pub fn emit<E: EventData>(&self) -> Result<(), EventError> {
     let key = TypeId::of::<E>();
-    Ok(self.0.get(&key).ok_or(EventError::EventNotFound(key))?.read().emit())
+    self
+      .0
+      .get(&key)
+      .ok_or(EventError::EventNotFound(key))?
+      .read()
+      .emit();
+    Ok(())
   }
 }
 
@@ -121,9 +140,7 @@ impl EventManager {
 // + will store the command alongside the tick of when it was requested
 // Might need to calculate the oldest system tick in order to do garbage collection on commands
 
-
 // !!! Event identifiers !!!
-
 
 // Type erased Event Listener here
 // No need for casting because data is completely separate and stored in command managers
